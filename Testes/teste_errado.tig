@@ -1,0 +1,8 @@
+let
+  type tipoarranjo = array of int
+  var Arranjo:tipoarranjo := tipoarranjo [10] of 0
+in
+  Arranjo[2] = "nome";
+  Arranjo[3] = "data"
+  Arranjo[4] = "telefone"
+end 
