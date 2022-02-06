@@ -55,11 +55,14 @@ public class SymbolTable {
         thash.put(newSymbol.name, table.size() - 1);
     }
 
-    public void removeSymbol(Symbol s) {
-        int k = getPositionFromHash(s.name);
+    public void removeSymbol(String symbolName) {
+        int k = getPositionFromHash(symbolName);
         while(k >= 0) {
-            if(table.get(k).name == s.name) {
-                thash.replace(s.name, table.get(k).collision);
+            if(table.get(k).name == symbolName) {
+                if(table.get(k).collision >= 0)
+                    thash.replace(symbolName, table.get(k).collision);
+                else
+                    thash.remove(symbolName);
                 table.remove(k);
             }
             k = table.get(k).collision;
