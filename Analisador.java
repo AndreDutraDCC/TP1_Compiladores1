@@ -4,6 +4,7 @@ import java.util.Scanner;
 import java.io.StringReader;
 import Lexer.*;
 import Grammar.*;
+import ErrorHandle.*;
 
 public class Analisador{
 	public static void analisar(String filename) throws Exception{
@@ -20,8 +21,9 @@ public class Analisador{
 		}
 		file_reader.close();
 		
+		ErrorMsg err = new ErrorMsg(filename);
 		StringReader code_reader = new StringReader(source_code);
-		Yylex lexer = new Yylex(code_reader);
+		Yylex lexer = new Yylex(code_reader,err);
 		
 		System.out.println("\n===============================================================================");
 		System.out.println("Produções da Análise sintática:\n");
