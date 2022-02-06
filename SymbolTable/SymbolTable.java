@@ -45,6 +45,7 @@ public class SymbolTable {
             k = table.get(k).collision;
         }
         newSymbol.collision = getPositionFromHash(newSymbol.name);
+        newSymbol.level = level;
         table.add(newSymbol);
         thash.put(newSymbol.name, table.size() - 1);
     }

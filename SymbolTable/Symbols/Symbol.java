@@ -10,9 +10,9 @@ public class Symbol {
         collision = -1;
     }
 
-    public Symbol(String name, int level, Types type) {
+    public Symbol(String name, Types type) {
         this.name = name;
-        this.level = level;
+        this.level = -1;
         this.type = type;
         collision = -1;
     }
