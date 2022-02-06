@@ -22,8 +22,13 @@ public class SymbolTable {
         int b = scope.get(level);
         while(s > b) {
             s--;
-            thash.replace(table.get(s).name, table.get(s).collision);
+            if(table.get(s).collision >= 0)
+                thash.replace(table.get(s).name, table.get(s).collision);
+            else
+                thash.remove(table.get(s).name);
+            table.remove(s);
         }
+        scope.remove(level);
         level--;
     }
 
