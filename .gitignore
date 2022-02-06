@@ -1,4 +1,3 @@
-*.class
-parser.java
-sym.java
-Yylex.java
+
+Lexer/*.java
+Grammar/*.java
