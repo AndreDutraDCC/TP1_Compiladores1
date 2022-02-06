@@ -7,7 +7,9 @@ import SymbolTable.Symbols.Symbol;
 public class SymbolTable {
     public SymbolTable() {
         level = -1;
-
+        table = new ArrayList<Symbol>();
+        scope = new ArrayList<Integer>();
+        thash = new Hashtable<String, Integer>();
     }
 
     public void enterBlock() {
@@ -39,7 +41,7 @@ public class SymbolTable {
         int k = getPositionFromHash(newSymbol.name);
         while(k >= scope.get(level)) {
             if(table.get(k).name == newSymbol.name)
-                throw new SymbolError(String.format("The symbol \"%s\" already exists on level %i!", newSymbol.name, newSymbol.level), null);
+                throw new SymbolError(String.format("The symbol \"%s\" already exists on level %d!", newSymbol.name, newSymbol.level), null);
             k = table.get(k).collision;
         }
         newSymbol.collision = getPositionFromHash(newSymbol.name);
