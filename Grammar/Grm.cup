@@ -1,7 +1,7 @@
 //Especificação de importação e pacotes
 
 package Grammar;
-import Lexer.*;
+import AbsSyn.*;
 
 //Símbolos terminais
 
@@ -13,7 +13,20 @@ terminal         NIL, OF, IF, THEN, ELSE, WHILE, DO, FOR, TO, BREAK, LET, IN, EN
 
 //Símbolos não terminais
 
-non terminal     exp, decs, dec, tydec, ty, tyfields, tyfields1, vardec, fundec, l_value, type_id, expseq, expseq1, args, args1, idexps;
+non terminal Exp          exp;
+non terminal Var          l_value;
+non terminal ExpList      expseq, expseq1, args, args1;
+non terminal FieldExpList idexps;
+
+non terminal DecList     decs;
+non terminal Dec         dec;
+non terminal DecVar      vardec;
+non terminal DecFunc     fundec;
+non terminal DecType     tydec;
+non terminal Ty          ty;
+non terminal FieldTyList tyfields, tyfields1; 
+non terminal String      type_id;
+
 
 //Declarações de precedência e associatividade
 
@@ -25,78 +38,82 @@ precedence right    UMINUS;
 
 //Gramática
 
-exp ::= l_value {:System.out.println("exp ::= l-value");:}
-        | NIL {:System.out.println("exp ::= nil");:}
-        | APAR expseq FPAR {:System.out.println("exp ::= ( expseq )");:}
-        | NUM {:System.out.println("exp ::= num");:}
-        | STR {:System.out.println("exp ::= str");:}
-        | MINUS exp {:System.out.println("exp ::= - expr");:} %prec UMINUS
-        | ID APAR args FPAR {:System.out.println("exp ::= id ( args )");:}
-        | exp PLUS exp {:System.out.println("exp ::= exp + exp");:}
-        | exp MINUS exp {:System.out.println("exp ::= exp - exp");:}
-        | exp TIMES exp {:System.out.println("exp ::= exp * exp");:}
-        | exp DIV exp {:System.out.println("exp ::= exp / exp");:}
-        | exp EQ exp {:System.out.println("exp ::= exp = exp");:}
-        | exp NEQ exp {:System.out.println("exp ::= exp <> exp");:}
-        | exp LT exp {:System.out.println("exp ::= exp < exp");:}
-        | exp GT exp {:System.out.println("exp ::= exp > exp");:}
-        | exp LTE exp {:System.out.println("exp ::= exp <= exp");:}
-        | exp GTE exp {:System.out.println("exp ::= exp >= exp");:}
-        | exp AND exp {:System.out.println("exp ::= exp & exp");:}
-        | exp OR exp {:System.out.println("exp ::= exp | exp");:}
-        | type_id ACHAV ID EQ exp idexps FCHAV {:System.out.println("exp ::= type-id { id = exp idexps }");:}
-        | ID ACOL exp FCOL OF exp {:System.out.println("exp ::= id [ exp ] of exp");:}
-        | l_value ATT exp {:System.out.println("exp ::= l-value := exp");:}
-        | IF exp THEN exp ELSE exp {:System.out.println("exp ::= if exp then exp else exp");:}
-        | IF exp THEN exp {:System.out.println("exp ::= if exp then exp");:}
-        | WHILE exp DO exp {:System.out.println("exp ::= while exp do exp");:}
-        | FOR ID ATT exp TO exp DO exp {:System.out.println("exp ::= for id := exp to exp do exp");:}
-        | BREAK {:System.out.println("exp ::= break");:}
-        | LET decs IN expseq END {:System.out.println("exp ::= let decs in expseq end");:};
+exp ::= l_value:v {:RESULT = v;:}
+        | NIL:n {:RESULT = new ExpNil(nleft);:}
+        | NUM:n {:RESULT = new ExpInt(nleft,n);:}
+        | STR:s {:RESULT = new ExpString(sleft,s);:}
 
-decs ::= dec decs {:System.out.println("decs ::= dec decs");:}
-        | {:System.out.println("decs ::= empty");:};
+        | MINUS:m exp:e {:RESULT = new ExpOp(mleft,ExpInt(eleft,0),sym.MINUS,e);:} %prec UMINUS
+        | exp:e1 PLUS exp:e2 {:RESULT = new ExpOp(e1left,e1,sym.PLUS,e2);:}
+        | exp:e1 MINUS exp:e2 {:RESULT = new ExpOp(e1left,e1,sym.MINUS,e2);:}
+        | exp:e1 TIMES exp:e2 {:RESULT = new ExpOp(e1left,e1,sym.TIMES,e2);:}
+        | exp:e1 DIV exp:e2 {:RESULT = new ExpOp(e1left,e1,sym.DIV,e2);:}
+        | exp:e1 EQ exp:e2 {:RESULT = new ExpOp(e1left,e1,sym.EQ,e2);:}
+        | exp:e1 NEQ exp:e2 {:RESULT = new ExpOp(e1left,e1,sym.NEQ,e2);:}
+        | exp:e1 LT exp:e2 {:RESULT = new ExpOp(e1left,e1,sym.LT,e2);:}
+        | exp:e1 GT exp:e2 {:RESULT = new ExpOp(e1left,e1,sym.GT,e2);:}
+        | exp:e1 LTE exp:e2 {:RESULT = new ExpOp(e1left,e1,sym.LTE,e2);:}
+        | exp:e1 GTE exp:e2 {:RESULT = new ExpOp(e1left,e1,sym.GTE,e2);:}
+        | exp:e1 AND exp:e2 {:RESULT = new ExpOp(e1left,e1,sym.AND,e2);:}
+        | exp:e1 OR exp:e2 {:RESULT = new ExpOp(e1left,e1,sym.OR,e2);:}
 
-dec ::= tydec {:System.out.println("dec ::= tydec");:}
-        | vardec {:System.out.println("dec ::= vardec");:}
-        | fundec {:System.out.println("dec ::= fundec");:};
+        | APAR:a expseq:l FPAR {:RESULT = ExpSeq(aleft,l);:}
+        | ID:id APAR args:ars FPAR {:RESULT = new ExpCall(idleft,id,ars);:}
+        | type_id:tid ACHAV ID:id EQ exp:ex idexps:l FCHAV {:RESULT = new ExpRec(tidleft,tid,new FieldExpList(id,exp,l));:}
+        | ID:tid ACOL exp:len FCOL OF exp:val {:RESULT = new ExpArray(tidleft,tid,len,val):}
+        | l_value:l ATT exp:e {:RESULT = new ExpAttr(lleft,l,e);:}
+        | IF:i exp:con THEN exp:e1 ELSE exp:e2 {:RESULT = new ExpIf(ileft,con,e1,e2):}
+        | IF:i exp:con THEN exp:e1 {:RESULT = new ExpIf(ileft,con,e1,null);:}
+        | WHILE:w exp:con DO exp:bod {:RESULT = ExpWhile(wleft,con,bod);:}
+        | FOR:f ID:id ATT exp:i TO exp:f DO exp:bod {:RESULT = new ExpFor(fleft,new DecVar(idleft,id,"int",i),f,bod);:}
+        | BREAK:bleft {:RESULT = new ExpBreak(bleft);:}
+        | LET:l decs:dcs IN expseq:exps END {:RESULT = new ExpLet(lleft,dcs,ExpSeq(expsleft,exps));:};
 
-tydec ::= TYPE ID EQ ty {:System.out.println("tydec ::= type id = ty");:};
+l_value ::= ID:id {:RESULT = new VarSimple(idleft,id);:}
+        | l_value:l PONTO ID:id {:RESULT = new VarField(lleft,l,id);:}
+        | l_value:l ACOL exp:e FCOL {:RESULT = new VarIndexed(lleft,l,e);:}
+        | ID:id ACOL exp:e FCOL {:RESULT = new VarIndexed(idleft,new VarSimple(id,e);:};
 
-ty ::= ID {:System.out.println("ty ::= id");:}
-        | ACHAV tyfields FCHAV {:System.out.println("ty ::= ( tyfields )");:}
-        | ARRAY OF ID {:System.out.println("ty ::= array of id");:};
+expseq ::= exp:e expseq1:l {:RESULT = new ExpList(e,l);:}
+        | {:RESULT = null;:};
 
-tyfields ::= ID DPONTOS type_id tyfields1 {:System.out.println("tyfields ::= id : type-id tyfields1");:}
-        | {:System.out.println("tyfields ::= empty");:};
+expseq1 ::= PVIRG exp:e expseq1:l {:RESULT = new ExpList(e,l);:}
+        | {:RESULT = null;:};
 
-tyfields1 ::= VIRG ID DPONTOS type_id tyfields1 {:System.out.println("tyfields1 ::= , id : type-id tyfields1");:}
-        | {:System.out.println("tyfields1 ::= empty");:};
+args ::= exp:e args1:l {:RESULT = new ExpList(e,l);:}
+        | {:RESULT = null:};
 
-vardec ::= VAR ID ATT exp {:System.out.println("vardec ::= var id := exp");:}
-        | VAR ID DPONTOS type_id ATT exp {:System.out.println("vardec ::= var id : type-id := exp");:};
+args1 ::= VIRG exp:e args1:l {:RESULT = new ExpList(e,l);:}
+        | {:RESULT = null;:};
 
-fundec ::= FUNCTION ID APAR tyfields FPAR EQ exp {:System.out.println("fundec ::= function id ( tyfields ) = exp");:}
-        | FUNCTION ID APAR tyfields FPAR DPONTOS type_id EQ exp {:System.out.println("fundec ::= function id ( tyfields ) : type_id = exp");:};
+idexps ::= VIRG ID:id EQ exp:ex idexps:l {:RESULT = FieldExpList(id,ex,l):}
+        | {:RESULT = null;:};
 
-l_value ::= ID {:System.out.println("l-value ::= id");:}
-        | l_value PONTO ID {:System.out.println("l-value ::= l-value . id");:}
-        | l_value ACOL exp FCOL {:System.out.println("l-value ::= l-value [ exp ]");:}
-        | ID ACOL exp FCOL {:System.out.println("l-value ::= id [ exp ]");:};
+decs ::= dec:d decs:l {:RESULT = new DecList(d,l);:}
+        | {:RESULT = null;:};
 
-type_id ::= ID {:System.out.println("type-id ::= id");:};
+dec ::= tydec:d {:RESULT = d;:}
+        | vardec:d {:RESULT = d;:}
+        | fundec:d {:RESULT = d;:};
 
-expseq ::= exp expseq1 {:System.out.println("expseq ::= exp expseq1");:}
-        | {:System.out.println("expseq ::= empty");:};
+vardec ::= VAR:v ID:id ATT exp:e {:RESULT = new VarDec(vleft,id,null,e);:}
+        | VAR:v ID:id DPONTOS type_id:tid ATT exp:e {:RESULT = new VarDec(vleft,id,tid,e);:};
 
-expseq1 ::= PVIRG exp expseq1 {:System.out.println("expseq1 ::= ; exp expseq1");:}
-        | {:System.out.println("expseq1 ::= empty");:};
+fundec ::= FUNCTION:fun ID:id APAR tyfields:params FPAR EQ exp:body {:RESULT = new DecFunc(funleft,id,null,params,body);:}
+        | FUNCTION:fun ID:id APAR tyfields:params FPAR DPONTOS type_id:tid EQ exp:body {:RESULT = new DecFunc(funleft,id,tid,params,body);:};
 
-args ::= exp args1 {:System.out.println("args ::= exp args1");:}
-        | {:System.out.println("args ::= empty");:};
+tydec ::= TYPE:ty ID:id EQ ty:t {:RESULT = new DecType(tyleft,id,t):};
 
-args1 ::= VIRG exp args1 {:System.out.println("args1 ::= , exp args1");:}
-        | {:System.out.println("args1 ::= empty");:};
+ty ::= ID:id {:RESULT = new TyName(id);:}
+        | ACHAV tyfields:fields FCHAV {:RESULT = new TyRec(fields);:}
+        | ARRAY OF ID:id {:RESULT = new TyArray(id);:};
 
-idexps ::= VIRG ID EQ exp idexps {:System.out.println("idexps ::= , id = exp idexps");:}
-        | {:System.out.println("idexps ::= empty");:};
+tyfields ::= ID:id DPONTOS type_id:tid tyfields1:l {:RESULT = new FieldTyList(id,tid,l);:}
+        | {:RESULT = null;:};
+
+tyfields1 ::= VIRG ID:id DPONTOS type_id:tid tyfields1:l {:RESULT = new FieldTyList(id,tid,l);:}
+        | {:RESULT = null;:};
+
+
+type_id ::= ID:id {:RESULT = id;:};
+
