@@ -8,16 +8,15 @@ public class IntermediateTree {
     public IntermediateTree() {
         root_ = new SEQ(null, null);
         lastStmtNode_ = root_;
-        currentLabel_ = currentTemp_ = 0;
-        freeStmtSlots_ = 2;
+        currentLabel_ = currentTemp_ = freeStmtSlot_ = 0;
         labels_ = new ArrayList<String>();
         varMapping_ = new Hashtable<String, String>();
     }
 
     public void appendNode(AbsNode n) {
-        if(freeStmtSlots_ > 0) {
-            lastStmtNode_.children[freeStmtSlots_ - 1] = n;
-            freeStmtSlots_--;
+        if(freeStmtSlot_ < 2) {
+            lastStmtNode_.children[freeStmtSlot_] = n;
+            freeStmtSlot_++;
         }else {
             SEQ newStmtNode = new SEQ(lastStmtNode_.children[1], n);
             lastStmtNode_.children[1] = newStmtNode;
@@ -42,7 +41,7 @@ public class IntermediateTree {
         return associatedId;
     }
 
-    public String getAssociations() {
+    public String getAssociationsString() {
         String[] keys = (String[]) varMapping_.keySet().toArray();
         String res = "";
         for(int i = 0; i < keys.length - 1; i++)
@@ -52,11 +51,15 @@ public class IntermediateTree {
         return res;
     }
 
+    public String getTreeString() {
+        return root_.toString();
+    }
+
     private SEQ root_;
     private SEQ lastStmtNode_;
     private int currentLabel_;
     private int currentTemp_;
-    private int freeStmtSlots_;
+    private int freeStmtSlot_;
     private ArrayList<String> labels_;
     private Hashtable<String, String> varMapping_;
 }

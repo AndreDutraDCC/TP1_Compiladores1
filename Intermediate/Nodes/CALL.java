@@ -5,7 +5,7 @@ public class CALL extends AbsNode {
         name_ = "CALL";
         children = new AbsNode[args.length + 1];
         children[0] = function;
-        for(int i = 0; i < children.length; i++)
+        for(int i = 0; i < args.length; i++)
             children[i + 1] = args[i];
     }
 }

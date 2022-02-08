@@ -11,7 +11,7 @@ public abstract class AbsNode {
 
     protected String childrenToString() {
         String res = "";
-        for(int i = 0; i < children.length; i++)
+        for(int i = 0; i < children.length - 1; i++)
             res += children[i] + ",\n";
         res += children[children.length - 1];
         return res;
