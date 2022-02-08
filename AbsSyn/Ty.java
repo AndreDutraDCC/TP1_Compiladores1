@@ -1,5 +1,5 @@
 package AbsSyn;
 
-public class Ty extends AbsNode{
+public abstract class Ty extends AbsNode{
     
 }

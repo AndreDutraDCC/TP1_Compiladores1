@@ -12,5 +12,13 @@ public class DecFunc extends Dec{
         return_type = type_id;
         param_types = params;
         body = ex;
+        classname = "DecFunc";
+    }
+
+    public void printkids(String pref){
+        print(pref,func_name);
+        print(pref,return_type);
+        print(pref,param_types);
+        print(pref,body,true);
     }
 }

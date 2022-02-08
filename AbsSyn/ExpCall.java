@@ -8,5 +8,11 @@ public class ExpCall extends Exp {
         pos = p;
         func_name = id;
         args = ars;
+        classname = "ExpCall";
+    }
+
+    public void printkids(String pref){
+        print(pref,func_name);
+        print(pref,args,true);
     }
 }

@@ -7,6 +7,17 @@ public class ExpList extends AbsNode{
     public ExpList(Exp cabeca, ExpList cauda){
         head = cabeca;
         tail = cauda;
+        classname = "ExpList";
+    }
+
+    public void printkids(String pref){
+        if(tail!=null){
+            print(pref,head);
+            tail.printkids(pref);
+        }
+        else{
+            print(pref,head,true);
+        }
     }
     
 }

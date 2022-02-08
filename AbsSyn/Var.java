@@ -1,5 +1,5 @@
 package AbsSyn;
 
-public class Var extends Exp{
+public abstract class Var extends Exp{
     
 }

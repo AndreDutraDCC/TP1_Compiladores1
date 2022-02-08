@@ -5,6 +5,7 @@ import java.io.StringReader;
 import Lexer.*;
 import Grammar.*;
 import ErrorHandle.*;
+import AbsSyn.*;
 
 public class Analisador{
 	public static void analisar(String filename) throws Exception{
@@ -26,11 +27,13 @@ public class Analisador{
 		Yylex lexer = new Yylex(code_reader,err);
 		
 		System.out.println("\n===============================================================================");
-		System.out.println("Produções da Análise sintática:\n");
+		System.out.println("Árvore de sintaxe abstrata:\n");
 		
 		parser parser_obj = new parser(lexer);
+		Exp res;
 		try{
-			parser_obj.parse();
+			res = (Exp) parser_obj.parse().value;
+			res.print("");
 		}
 		catch(Exception e){
 			System.out.println("\nErro de Sintaxe.\n");

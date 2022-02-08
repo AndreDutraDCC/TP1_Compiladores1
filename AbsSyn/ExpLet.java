@@ -8,5 +8,11 @@ public class ExpLet extends Exp {
         pos = p;
         decs = dcs;
         exps = exs;
+        classname = "ExpLet";
+    }
+
+    public void printkids(String pref){
+        print(pref,decs);
+        print(pref,exps,true);
     }
 }

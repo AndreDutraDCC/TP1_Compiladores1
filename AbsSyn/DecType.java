@@ -8,5 +8,11 @@ public class DecType extends Dec{
         pos = p;
         type_name = id;
         type_body = type;
+        classname = "DecType";
+    }
+
+    public void printkids(String pref){
+        print(pref,type_name);
+        print(pref,type_body,true);
     }
 }

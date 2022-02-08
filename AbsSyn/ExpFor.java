@@ -9,6 +9,13 @@ public class ExpFor extends Exp{
         itr_var = d;
         itr_end = end;
         body = bod;
+        classname = "ExpFor";
+    }
+
+    public void printkids(String pref){
+        print(pref,itr_var);
+        print(pref,itr_end);
+        print(pref,body,true);
     }
 
 }
