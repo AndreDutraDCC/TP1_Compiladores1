@@ -6,7 +6,11 @@ public class ExpInt extends Exp{
     public ExpInt(int p, int v){
         pos = p;
         val = v;
+        classname = "ExpInt";
     }
 
+    public void printkids(String pref){
+        print(pref,val);
+    }
     
 }

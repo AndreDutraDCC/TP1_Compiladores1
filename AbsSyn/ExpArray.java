@@ -10,5 +10,12 @@ public class ExpArray extends Exp {
         arr_type = type;
         len = l;
         val = v;
+        classname = "ExpArray";
+    }
+
+    public void printkids(String pref){
+        print(pref,arr_type);
+        print(pref,len);
+        print(pref,val,true);
     }
 }

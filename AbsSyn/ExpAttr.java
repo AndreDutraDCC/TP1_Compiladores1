@@ -8,6 +8,12 @@ public class ExpAttr extends Exp{
         pos = p;
         var = vr;
         val = vl;
+        classname = "ExpAttr";
+    }
+
+    public void printkids(String pref){
+        print(pref,var);
+        print(pref,val,true);
     }
     
 }

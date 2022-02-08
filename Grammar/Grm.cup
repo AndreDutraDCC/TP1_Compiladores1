@@ -18,14 +18,15 @@ non terminal Var          l_value;
 non terminal ExpList      expseq, expseq1, args, args1;
 non terminal FieldExpList idexps;
 
-non terminal DecList     decs;
-non terminal Dec         dec;
-non terminal DecVar      vardec;
-non terminal DecFunc     fundec;
-non terminal DecType     tydec;
-non terminal Ty          ty;
-non terminal FieldTyList tyfields, tyfields1; 
-non terminal String      type_id;
+non terminal DecList      decs;
+non terminal Dec          dec;
+non terminal DecVar       vardec;
+non terminal DecFunc      fundec;
+non terminal DecType      tydec;
+non terminal String       type_id;
+non terminal Ty           ty;
+non terminal FieldTyList  tyfields, tyfields1; 
+
 
 
 //Declarações de precedência e associatividade
@@ -43,7 +44,7 @@ exp ::= l_value:v {:RESULT = v;:}
         | NUM:n {:RESULT = new ExpInt(nleft,n);:}
         | STR:s {:RESULT = new ExpString(sleft,s);:}
 
-        | MINUS:m exp:e {:RESULT = new ExpOp(mleft,ExpInt(eleft,0),sym.MINUS,e);:} %prec UMINUS
+        | MINUS:m exp:e {:RESULT = new ExpOp(mleft,new ExpInt(eleft,0),sym.MINUS,e);:} %prec UMINUS
         | exp:e1 PLUS exp:e2 {:RESULT = new ExpOp(e1left,e1,sym.PLUS,e2);:}
         | exp:e1 MINUS exp:e2 {:RESULT = new ExpOp(e1left,e1,sym.MINUS,e2);:}
         | exp:e1 TIMES exp:e2 {:RESULT = new ExpOp(e1left,e1,sym.TIMES,e2);:}
@@ -57,22 +58,22 @@ exp ::= l_value:v {:RESULT = v;:}
         | exp:e1 AND exp:e2 {:RESULT = new ExpOp(e1left,e1,sym.AND,e2);:}
         | exp:e1 OR exp:e2 {:RESULT = new ExpOp(e1left,e1,sym.OR,e2);:}
 
-        | APAR:a expseq:l FPAR {:RESULT = ExpSeq(aleft,l);:}
+        | APAR:a expseq:l FPAR {:RESULT = new ExpSeq(aleft,l);:}
         | ID:id APAR args:ars FPAR {:RESULT = new ExpCall(idleft,id,ars);:}
-        | type_id:tid ACHAV ID:id EQ exp:ex idexps:l FCHAV {:RESULT = new ExpRec(tidleft,tid,new FieldExpList(id,exp,l));:}
-        | ID:tid ACOL exp:len FCOL OF exp:val {:RESULT = new ExpArray(tidleft,tid,len,val):}
+        | type_id:tid ACHAV ID:id EQ exp:ex idexps:l FCHAV {:RESULT = new ExpRec(tidleft,tid,new FieldExpList(id,ex,l));:}
+        | ID:tid ACOL exp:len FCOL OF exp:val {:RESULT = new ExpArray(tidleft,tid,len,val);:}
         | l_value:l ATT exp:e {:RESULT = new ExpAttr(lleft,l,e);:}
-        | IF:i exp:con THEN exp:e1 ELSE exp:e2 {:RESULT = new ExpIf(ileft,con,e1,e2):}
+        | IF:i exp:con THEN exp:e1 ELSE exp:e2 {:RESULT = new ExpIf(ileft,con,e1,e2);:}
         | IF:i exp:con THEN exp:e1 {:RESULT = new ExpIf(ileft,con,e1,null);:}
-        | WHILE:w exp:con DO exp:bod {:RESULT = ExpWhile(wleft,con,bod);:}
-        | FOR:f ID:id ATT exp:i TO exp:f DO exp:bod {:RESULT = new ExpFor(fleft,new DecVar(idleft,id,"int",i),f,bod);:}
-        | BREAK:bleft {:RESULT = new ExpBreak(bleft);:}
-        | LET:l decs:dcs IN expseq:exps END {:RESULT = new ExpLet(lleft,dcs,ExpSeq(expsleft,exps));:};
+        | WHILE:w exp:con DO exp:bod {:RESULT = new ExpWhile(wleft,con,bod);:}
+        | FOR:fr ID:id ATT exp:i TO exp:f DO exp:bod {:RESULT = new ExpFor(frleft,new DecVar(idleft,id,"int",i),f,bod);:}
+        | BREAK:b {:RESULT = new ExpBreak(bleft);:}
+        | LET:l decs:dcs IN expseq:exps END {:RESULT = new ExpLet(lleft,dcs,new ExpSeq(expsleft,exps));:};
 
 l_value ::= ID:id {:RESULT = new VarSimple(idleft,id);:}
         | l_value:l PONTO ID:id {:RESULT = new VarField(lleft,l,id);:}
         | l_value:l ACOL exp:e FCOL {:RESULT = new VarIndexed(lleft,l,e);:}
-        | ID:id ACOL exp:e FCOL {:RESULT = new VarIndexed(idleft,new VarSimple(id,e);:};
+        | ID:id ACOL exp:e FCOL {:RESULT = new VarIndexed(idleft,new VarSimple(idleft,id),e);:};
 
 expseq ::= exp:e expseq1:l {:RESULT = new ExpList(e,l);:}
         | {:RESULT = null;:};
@@ -81,12 +82,12 @@ expseq1 ::= PVIRG exp:e expseq1:l {:RESULT = new ExpList(e,l);:}
         | {:RESULT = null;:};
 
 args ::= exp:e args1:l {:RESULT = new ExpList(e,l);:}
-        | {:RESULT = null:};
+        | {:RESULT = null;:};
 
 args1 ::= VIRG exp:e args1:l {:RESULT = new ExpList(e,l);:}
         | {:RESULT = null;:};
 
-idexps ::= VIRG ID:id EQ exp:ex idexps:l {:RESULT = FieldExpList(id,ex,l):}
+idexps ::= VIRG ID:id EQ exp:ex idexps:l {:RESULT = new FieldExpList(id,ex,l);:}
         | {:RESULT = null;:};
 
 decs ::= dec:d decs:l {:RESULT = new DecList(d,l);:}
@@ -96,13 +97,13 @@ dec ::= tydec:d {:RESULT = d;:}
         | vardec:d {:RESULT = d;:}
         | fundec:d {:RESULT = d;:};
 
-vardec ::= VAR:v ID:id ATT exp:e {:RESULT = new VarDec(vleft,id,null,e);:}
-        | VAR:v ID:id DPONTOS type_id:tid ATT exp:e {:RESULT = new VarDec(vleft,id,tid,e);:};
+vardec ::= VAR:v ID:id ATT exp:e {:RESULT = new DecVar(vleft,id,null,e);:}
+        | VAR:v ID:id DPONTOS type_id:tid ATT exp:e {:RESULT = new DecVar(vleft,id,tid,e);:};
 
 fundec ::= FUNCTION:fun ID:id APAR tyfields:params FPAR EQ exp:body {:RESULT = new DecFunc(funleft,id,null,params,body);:}
         | FUNCTION:fun ID:id APAR tyfields:params FPAR DPONTOS type_id:tid EQ exp:body {:RESULT = new DecFunc(funleft,id,tid,params,body);:};
 
-tydec ::= TYPE:ty ID:id EQ ty:t {:RESULT = new DecType(tyleft,id,t):};
+tydec ::= TYPE:ty ID:id EQ ty:t {:RESULT = new DecType(tyleft,id,t);:};
 
 ty ::= ID:id {:RESULT = new TyName(id);:}
         | ACHAV tyfields:fields FCHAV {:RESULT = new TyRec(fields);:}

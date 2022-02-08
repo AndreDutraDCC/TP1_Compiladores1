@@ -8,5 +8,11 @@ public class VarIndexed extends Var{
         pos = p;
         var = lvalue;
         index = e;
+        classname = "VarIndexed";
+    }
+
+    public void printkids(String pref){
+        print(pref,var);
+        print(pref,index,true);
     }
 }

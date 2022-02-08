@@ -8,5 +8,11 @@ public class ExpRec extends Exp {
         pos = p;
         rec_type = type;
         fields = list;
+        classname = "ExpRec";
+    }
+
+    public void printkids(String pref){
+        print(pref,rec_type);
+        print(pref,fields,true);
     }
 }

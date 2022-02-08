@@ -7,5 +7,11 @@ public class ExpWhile extends Exp{
         pos = p;
         cond = con;
         body = bod;
+        classname = "ExpWhile";
+    }
+
+    public void printkids(String pref){
+        print(pref,cond);
+        print(pref,body,true);
     }
 }
