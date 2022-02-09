@@ -6,6 +6,7 @@ public class FieldExpList extends AbsNode{
     public FieldExpList tail;
 
     public FieldExpList(String id, Exp ex, FieldExpList cauda){
+        super();
         field_id = id;
         field_value = ex;
         tail = cauda;

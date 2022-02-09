@@ -39,7 +39,7 @@ public class SymbolTable {
                 return table.get(k);
             k = table.get(k).collision;
         }
-        throw new SymbolError(String.format("Symbol \"%s\" not found on the symbol table!", name), null);
+        return null;
     }
 
     public void installSymbol(Symbol newSymbol) throws SymbolError {

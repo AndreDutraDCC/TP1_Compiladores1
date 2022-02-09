@@ -1,14 +1,17 @@
 package AbsSyn;
 
+
+
 public class DecVar extends Dec{
     public String var_name;
     public String var_type;
     public Exp    var_value;
 
-    public DecVar(int p, String id, String type, Exp val){
+    public DecVar(int p, String id, String typ, Exp val){
+        super();
         pos = p;
         var_name = id;
-        var_type = type;
+        var_type = typ;
         var_value = val;
         classname = "DecVar";
     }

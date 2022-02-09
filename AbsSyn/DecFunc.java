@@ -1,5 +1,7 @@
 package AbsSyn;
 
+
+
 public class DecFunc extends Dec{
     public String      func_name;
     public String      return_type;
@@ -7,6 +9,7 @@ public class DecFunc extends Dec{
     public Exp         body;
 
     public DecFunc(int p, String id, String type_id, FieldTyList params, Exp ex){
+        super();
         pos = p;
         func_name = id;
         return_type = type_id;

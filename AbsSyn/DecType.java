@@ -1,13 +1,16 @@
 package AbsSyn;
 
+
+
 public class DecType extends Dec{
     public String type_name;
     public Ty     type_body;
 
-    public DecType(int p, String id, Ty type){
+    public DecType(int p, String id, Ty typ){
+        super();
         pos = p;
         type_name = id;
-        type_body = type;
+        type_body = typ;
         classname = "DecType";
     }
 

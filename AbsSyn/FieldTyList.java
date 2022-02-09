@@ -6,6 +6,7 @@ public class FieldTyList extends AbsNode{
     public FieldTyList tail;
 
     public FieldTyList(String id, String type_id, FieldTyList cauda){
+        super();
         field_id = id;
         field_type = type_id;
         tail = cauda;

@@ -5,6 +5,7 @@ public class ExpRec extends Exp {
     public FieldExpList fields;
 
     public ExpRec(int p, String type, FieldExpList list){
+        super();
         pos = p;
         rec_type = type;
         fields = list;

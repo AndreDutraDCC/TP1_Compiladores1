@@ -1,13 +1,16 @@
 package AbsSyn;
 
+
+
 public class ExpArray extends Exp {
     String arr_type;
     Exp len;
     Exp val;
 
-    public ExpArray(int p, String type, Exp l, Exp v){
+    public ExpArray(int p, String typ, Exp l, Exp v){
+        super();
         pos = p;
-        arr_type = type;
+        arr_type = typ;
         len = l;
         val = v;
         classname = "ExpArray";

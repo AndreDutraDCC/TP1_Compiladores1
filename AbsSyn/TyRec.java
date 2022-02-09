@@ -4,6 +4,7 @@ public class TyRec extends Ty{
     public FieldTyList field_types;
 
     public TyRec(FieldTyList fields){
+        super();
         field_types = fields;
         classname = "TyRec";
     }

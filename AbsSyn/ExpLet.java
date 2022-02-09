@@ -5,6 +5,7 @@ public class ExpLet extends Exp {
     public ExpSeq exps;
 
     public ExpLet(int p, DecList dcs, ExpSeq exs){
+        super();
         pos = p;
         decs = dcs;
         exps = exs;

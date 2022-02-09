@@ -5,6 +5,7 @@ public class ExpFor extends Exp{
     public Exp    itr_end,body;
 
     public ExpFor(int p, DecVar d, Exp end, Exp bod){
+        super();
         pos = p;
         itr_var = d;
         itr_end = end;

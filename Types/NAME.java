@@ -2,8 +2,8 @@ package Types;
 
 import java.lang.annotation.Inherited;
 
-public class Name extends Type {
-    public Name(String name) {
+public class NAME extends Type {
+    public NAME(String name) {
         name_ = name;
     }
 
@@ -17,8 +17,8 @@ public class Name extends Type {
         binding_ = null;
         if(aux == null)
             loops = true;
-        else if(aux instanceof Name)
-            loops = ((Name) aux).hasLoop();
+        else if(aux instanceof NAME)
+            loops = ((NAME) aux).hasLoop();
         else
             loops = false;
         binding_ = aux;

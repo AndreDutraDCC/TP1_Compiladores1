@@ -5,6 +5,7 @@ public class VarIndexed extends Var{
     public Exp index;
 
     public VarIndexed(int p, Var lvalue, Exp e){
+        super();
         pos = p;
         var = lvalue;
         index = e;

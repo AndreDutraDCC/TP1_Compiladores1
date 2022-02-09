@@ -5,6 +5,7 @@ public class ExpCall extends Exp {
     ExpList args;
 
     public ExpCall(int p, String id, ExpList ars){
+        super();
         pos = p;
         func_name = id;
         args = ars;

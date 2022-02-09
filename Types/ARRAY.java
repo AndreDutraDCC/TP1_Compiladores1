@@ -1,7 +1,7 @@
 package Types;
 
-public class Array extends Type {
-    public Array(Type elementsType) {
+public class ARRAY extends Type {
+    public ARRAY(Type elementsType) {
         elementsType_ = elementsType;
     }
 

@@ -5,6 +5,7 @@ public class ExpList extends AbsNode{
     public ExpList tail;
     
     public ExpList(Exp cabeca, ExpList cauda){
+        super();
         head = cabeca;
         tail = cauda;
         classname = "ExpList";

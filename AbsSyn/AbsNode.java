@@ -1,10 +1,18 @@
 package AbsSyn;
 
+import Types.*;
+
 //Abstração do nó na árvore de sintaxe abstrata
 
 public abstract class AbsNode {
     public int pos;
     public String classname;
+
+    public Type type;
+
+    public AbsNode(){
+        type = null;
+    }
 
     public void print(String pref, Boolean last){
         String sep;

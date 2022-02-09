@@ -5,6 +5,7 @@ public class VarField extends Var{
     public String field_name;
 
     public VarField(int p,Var v, String id){
+        super();
         pos = p;
         var = v;
         field_name = id;
