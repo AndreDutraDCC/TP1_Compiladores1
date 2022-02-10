@@ -31,7 +31,7 @@ public class ErrorMsg {
         }
 
         errmsg = "Erro na compilação do arquivo "+filename_+":"+"\n"+
-        "linha "+String.valueOf(linha)+ ", caractere "+String.valueOf(pos - poslist_.get(linha-1))+":\t"+message;
+        " linha "+String.valueOf(linha)+ ", caractere "+String.valueOf(pos - poslist_.get(linha-1))+":\n\t"+message+"\n";
         if(raise){
             throw new CompilingException(errmsg);
         }

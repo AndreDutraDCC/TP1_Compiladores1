@@ -1,6 +1,4 @@
 import java.io.File;
-import java.io.IOException;
-import java.util.Scanner;
 import java.io.StringReader;
 import Lexer.*;
 import Grammar.*;
@@ -29,7 +27,7 @@ public class Analisador{
 		System.out.println("\n===============================================================================");
 		System.out.println("Árvore de sintaxe abstrata:\n");
 		
-		parser parser_obj = new parser(lexer);
+		parser parser_obj = new parser(lexer,err);
 		Exp res;
 		try{
 			res = (Exp) parser_obj.parse().value;

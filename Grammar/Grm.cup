@@ -1,7 +1,41 @@
 //Especificação de importação e pacotes
 
 package Grammar;
+
+import ErrorHandle.ErrorMsg;
+import java_cup.runtime.Symbol;
 import AbsSyn.*;
+import java.util.List;
+
+//Código customizado para o analisador
+
+parser code {:
+
+public Exp parseResult;
+ErrorMsg errorMsg;
+
+public parser(java_cup.runtime.Scanner s, ErrorMsg err) {
+        this(s);
+        errorMsg=err;
+}
+
+public void syntax_error(Symbol current) {
+        List<Integer> expec = expected_token_ids();
+        String msg = "Erro de sintaxe: token ";
+
+        msg += sym.terminalNames[current.sym]+" lido, mas tokens esperados eram: ";
+        
+        if(expec.size() > 0){
+                msg+=sym.terminalNames[expec.get(0)];
+        }
+
+        for(int i = 1; i < expec.size();i++){
+                msg+=", "+sym.terminalNames[expec.get(i)];
+        }
+        errorMsg.error(current.left, msg);
+}
+
+:};
 
 //Símbolos terminais
 
