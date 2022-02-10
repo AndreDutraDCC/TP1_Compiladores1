@@ -7,8 +7,8 @@ public class LABEL extends AbsNode {
     }
 
     @Override
-    public String toString() {
-        return "LABEL " + name_; 
+    public String stringRepresentation(String prefix) {
+        return prefix + "LABEL " + name_; 
     }
 
     private String name_;

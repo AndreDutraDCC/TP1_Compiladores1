@@ -7,8 +7,8 @@ public class TEMP extends AbsNode {
     }
 
     @Override
-    public String toString() {
-        return "TEMP t" + id_;
+    public String stringRepresentation(String prefix) {
+        return prefix + "TEMP t" + id_;
     }
 
     int id_;

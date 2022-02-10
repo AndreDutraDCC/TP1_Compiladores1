@@ -52,7 +52,7 @@ public class IntermediateTree {
     }
 
     public String getTreeString() {
-        return root_.toString();
+        return root_.stringRepresentation("");
     }
 
     private SEQ root_;

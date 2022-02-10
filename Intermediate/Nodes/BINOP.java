@@ -11,8 +11,8 @@ public class BINOP extends AbsNode {
     }
 
     @Override
-    public String toString() {
-        return name_ + "(" + operatorName() + ",\n" + childrenToString() + ")";
+    public String stringRepresentation(String prefix) {
+        return prefix + name_ + "(" + operatorName() + ",\n" + childrenToString(" " + prefix) + ")";
     }
 
     private String operatorName() {
