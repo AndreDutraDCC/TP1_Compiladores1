@@ -12,13 +12,13 @@ Grammar/parser.class: Grammar/parser.java Lexer/Yylex.class Grammar/sym.class Ab
 	javac -cp Grammar/java-cup-11b-runtime.jar:. Grammar/parser.java
 
 Lexer/Yylex.class: Lexer/Yylex.java Grammar/sym.class ErrorHandle/ErrorMsg.class
-	javac -cp Grammar/java-cup-11b-runtime.jar:. Lexer/Yylex.java
+	javac -cp Grammar/java-cup-11b-runtime.jar:. $<
 
 ErrorHandle/ErrorMsg.class: ErrorHandle/ErrorMsg.java
 	javac $<
 
 AbsSyn/*.class: AbsSyn/*.java Grammar/sym.class
-	javac AbsSyn/*.java
+	javac -cp . AbsSyn/*.java
 
 Grammar/sym.class: Grammar/sym.java
 	javac $<
