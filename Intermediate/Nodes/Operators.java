@@ -1,10 +1,10 @@
 package Intermediate.Nodes;
 
 public enum Operators {
-    PLUS,
-    MINUS,
-    MUL,
-    DIV,
-    AND,
-    OR
+    PLUS1,
+    MINUS1,
+    MUL1,
+    DIV1,
+    AND1,
+    OR1
 }

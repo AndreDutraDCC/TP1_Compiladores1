@@ -1,16 +1,16 @@
 package SymbolTable.Symbols;
 
-import SymbolTable.Types;
+import Types.*;
 
 public class Symbol {
     public Symbol() {
         name = "";
         level = -1;
-        type = Types.UNDEFINED;
+        type = null;
         collision = -1;
     }
 
-    public Symbol(String name, Types type) {
+    public Symbol(String name, Type type) {
         this.name = name;
         this.level = -1;
         this.type = type;
@@ -19,6 +19,6 @@ public class Symbol {
 
     public String name;
     public int level;
-    public Types type;
+    public Type type;
     public int collision;
 }

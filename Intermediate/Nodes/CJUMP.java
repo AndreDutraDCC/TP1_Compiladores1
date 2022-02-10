@@ -1,9 +1,9 @@
 package Intermediate.Nodes;
 
-public class CJUMP extends AbsNode {
-    public CJUMP(Operators o, AbsNode e1, AbsNode e2, AbsNode trueStmt, AbsNode falseStmt) {
+public class CJUMP extends Stm {
+    public CJUMP(int o, Stm e1, Stm e2, Stm trueStmt, Stm falseStmt) {
         name_ = "CJUMP";
-        children = new AbsNode[4];
+        children = new Stm[4];
         children[0] = null;
         children[1] = e1;
         children[2] = e2;

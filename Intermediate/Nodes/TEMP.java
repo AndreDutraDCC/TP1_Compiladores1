@@ -1,6 +1,6 @@
 package Intermediate.Nodes;
 
-public class TEMP extends AbsNode {
+public class TEMP extends Stm {
     public TEMP(int t) {
         name_ = "TEMP";
         id_ = t;

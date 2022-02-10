@@ -13,7 +13,7 @@ public class IntermediateTree {
         varMapping_ = new Hashtable<String, String>();
     }
 
-    public void appendNode(AbsNode n) {
+    public void appendNode(Stm n) {
         if(freeStmtSlot_ < 2) {
             lastStmtNode_.children[freeStmtSlot_] = n;
             freeStmtSlot_++;

@@ -1,9 +1,9 @@
 package Intermediate.Nodes;
 
-public class EXP extends AbsNode {
-    public EXP(AbsNode e) {
+public class EXP extends Stm {
+    public EXP(Stm e) {
         name_ = "EXP";
-        children = new AbsNode[1];
+        children = new Stm[1];
         children[0] = e;
     }
 }

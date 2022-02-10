@@ -1,6 +1,6 @@
 package Intermediate.Nodes;
 
-public abstract class AbsNode {
+public abstract class Stm {
     
     @Override
     public java.lang.String toString() {
@@ -18,5 +18,5 @@ public abstract class AbsNode {
     }
 
     String name_;
-    public AbsNode[] children;
+    public Stm[] children;
 }

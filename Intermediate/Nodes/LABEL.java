@@ -1,6 +1,6 @@
 package Intermediate.Nodes;
 
-public class LABEL extends AbsNode {
+public class LABEL extends Stm {
     public LABEL(String name) {
         name_ = name;
         children = null;
