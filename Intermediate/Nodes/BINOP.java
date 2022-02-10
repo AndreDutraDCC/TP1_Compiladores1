@@ -1,5 +1,7 @@
 package Intermediate.Nodes;
 
+import static Grammar.sym.*;
+
 public class BINOP extends Stm {
     public BINOP(int o, Stm e1, Stm e2) {
         name_ = "BINOP";
@@ -16,16 +18,7 @@ public class BINOP extends Stm {
     }
 
     private String operatorName() {
-        /*switch(op_) {
-            case PLUS1: return "PLUS";
-            case MINUS1: return "MINUS";
-            case MUL1: return "MUL";
-            case DIV1: return "DIV";
-            case AND1: return "AND";
-            case OR1: return "OR";
-            default: return "";
-        }*/
-        return "";
+        return terminalNames[op_];
     }
 
     private int op_;
