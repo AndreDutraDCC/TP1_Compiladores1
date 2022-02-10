@@ -2,18 +2,19 @@ package Intermediate.Nodes;
 
 public abstract class Stm {
     
-    @Override
-    public java.lang.String toString() {
-        String res = name_ + "(\n";
-        res += childrenToString();
+    public String stringRepresentation(String prefix) {
+        String res = prefix + name_ + "(\n";
+        res += childrenToString(prefix);
         return res + ")";
     }
 
-    protected String childrenToString() {
+    protected String childrenToString(String prefix) {
         String res = "";
+        if(children == null)
+            return res;
         for(int i = 0; i < children.length - 1; i++)
-            res += children[i] + ",\n";
-        res += children[children.length - 1];
+            res += children[i].stringRepresentation(prefix + " ") + ",\n";
+        res += children[children.length - 1].stringRepresentation(prefix + " ");
         return res;
     }
 

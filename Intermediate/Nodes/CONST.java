@@ -7,8 +7,8 @@ public class CONST extends Stm {
     }
 
     @Override
-    public String toString() {
-        return "CONST " + value_;
+    public String stringRepresentation(String prefix) {
+        return prefix + "CONST " + value_;
     }
 
     private int value_;

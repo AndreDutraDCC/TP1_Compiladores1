@@ -6,8 +6,8 @@ public class NAME extends Stm {
     }
 
     @Override
-    public String toString() {
-        return "NAME " + name_;
+    public String stringRepresentation(String prefix) {
+        return prefix + "NAME " + name_;
     }
 
     private String name_;

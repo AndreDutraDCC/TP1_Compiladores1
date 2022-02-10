@@ -1,15 +1,14 @@
 package Intermediate;
 
 import Intermediate.Nodes.*;
-import  java.util.ArrayList;
 import java.util.Hashtable;
 
 public class IntermediateTree {
     public IntermediateTree() {
         root_ = new SEQ(null, null);
         lastStmtNode_ = root_;
-        currentLabel_ = currentTemp_ = freeStmtSlot_ = 0;
-        labels_ = new ArrayList<String>();
+        freeLabel_ = currentTemp_ = freeStmtSlot_ = 0;
+        dataLabels_ = new Hashtable<Integer, String>();
         varMapping_ = new Hashtable<String, String>();
     }
 
@@ -24,11 +23,9 @@ public class IntermediateTree {
         }
     }
 
-    public String makeLabel() {
-        String newLabel = "L" + currentLabel_;
-        labels_.add(newLabel);
-        currentLabel_++;
-        return newLabel;
+    public int makeDataLabel(String data) {
+        dataLabels_.put(freeLabel_, data);
+        return freeLabel_++;
     }
 
     public int getTemporary() {
@@ -42,7 +39,11 @@ public class IntermediateTree {
     }
 
     public String getAssociationsString() {
-        String[] keys = (String[]) varMapping_.keySet().toArray();
+        int numAssociations = varMapping_.size();
+        if(numAssociations <= 0)
+            return "";
+        String[] keys = new String[numAssociations];
+        keys = varMapping_.keySet().toArray(keys); 
         String res = "";
         for(int i = 0; i < keys.length - 1; i++)
             res += String.format("Variavel \"%s\" esta associada a \"%s\"\n", keys[i], varMapping_.get(keys[i]));
@@ -51,15 +52,27 @@ public class IntermediateTree {
         return res;
     }
 
+    public String getDataLabelsString() {
+        int numLabels = dataLabels_.size();
+        if(numLabels <= 0)
+            return "";
+        Integer[] keys = new Integer[numLabels];
+        keys = dataLabels_.keySet().toArray(keys);
+        String res = "";
+        for(int i = 0; i < keys.length; i++)
+            res += String.format("L%d = \"%s\"\n", i, dataLabels_.get(i));
+        return res;
+    }
+
     public String getTreeString() {
-        return root_.toString();
+        return root_.stringRepresentation("");
     }
 
     private SEQ root_;
     private SEQ lastStmtNode_;
-    private int currentLabel_;
+    private int freeLabel_;
     private int currentTemp_;
     private int freeStmtSlot_;
-    private ArrayList<String> labels_;
+    private Hashtable<Integer, String> dataLabels_;
     private Hashtable<String, String> varMapping_;
 }
