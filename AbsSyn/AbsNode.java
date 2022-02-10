@@ -9,9 +9,11 @@ public abstract class AbsNode {
     public String classname;
 
     public Type type;
+    public int mem_size;
 
     public AbsNode(){
         type = null;
+        mem_size = -1;
     }
 
     public void print(String pref, Boolean last){

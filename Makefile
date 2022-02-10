@@ -31,6 +31,6 @@ Grammar/sym.java Grammar/parser.java: Grammar/Grm.cup
 	cd Grammar; java -jar java-cup-11b.jar -expect 2 Grm.cup
 
 clean: 
-	rm -f Lexer/*.java Lexer/*.class Grammar/*.java Grammar/*.class *.class ErrorHandle/*.class AbsSyn/*.class
+	rm -f Lexer/*.java Lexer/*.class Grammar/parser.java Grammar/*.class *.class ErrorHandle/*.class AbsSyn/*.class
 
 	
