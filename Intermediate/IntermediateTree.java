@@ -14,11 +14,11 @@ public class IntermediateTree {
 
     public void appendNode(Stm n) {
         if(freeStmtSlot_ < 2) {
-            lastStmtNode_.children[freeStmtSlot_] = n;
+            lastStmtNode_.children.set(freeStmtSlot_, n);
             freeStmtSlot_++;
         }else {
-            SEQ newStmtNode = new SEQ(lastStmtNode_.children[1], n);
-            lastStmtNode_.children[1] = newStmtNode;
+            SEQ newStmtNode = new SEQ(lastStmtNode_.children.get(0), n);
+            lastStmtNode_.children.set(1, newStmtNode);
             lastStmtNode_ = newStmtNode;
         }
     }

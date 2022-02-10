@@ -1,10 +1,12 @@
 package Intermediate.Nodes;
 
+import java.util.ArrayList;
+
 public class MOVE extends Stm {
     public MOVE(Stm destination, Stm source) {
         name_ = "MOVE";
-        children = new Stm[2];
-        children[0] = destination;
-        children[1] = source;
+        children = new ArrayList<Stm>(2);
+        children.add(destination);
+        children.add(source);
     }
 }
