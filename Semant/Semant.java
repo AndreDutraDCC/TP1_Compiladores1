@@ -120,7 +120,7 @@ public class Semant {
 
         if(d.type_body instanceof TyRec){
             body = (TyRec) d.type_body;
-            TyEnv.installSymbol(new TypeSymbol(d.type_name, res_type, d.type_body.mem_size,body.offsets));
+            TyEnv.installSymbol(new TypeSymbol(d.type_name, res_type, d.type_body.mem_size,body.fields));
         }
         else{
             TyEnv.installSymbol(new TypeSymbol(d.type_name, res_type, d.type_body.mem_size));
@@ -251,19 +251,25 @@ public class Semant {
 
     private Stm translateExpInt(ExpInt e){
         e.type = new INT();
-        
         e.mem_size = 4;
+
         return new CONST(e.val);
     }
 
     private Stm translateExpString(ExpString e){
         e.type = new STRING();
-        return null;//TODO STRING CODE
+        e.mem_size = 4;
+        //TODO LABEL STRING
+        String label = "L?";
+
+        return new Name(label);
     }
 
     private Stm translateExpNil(ExpNil e){
         e.type = new NIL();
-        return null;//TODO NIL CODE
+        e.mem_size = 0;
+        
+        return new CONST(0);
     }
 
     private Stm translateExpOp(ExpOp e){
@@ -381,13 +387,102 @@ public class Semant {
 
     //Tradução de Variáveis
 
-    private Stm translateVar(Var v){return null;}
+    private Stm translateVar(Var v){
+        if(v instanceof VarField){
+            return translateVarField((VarField) v);
+        }
+        if(v instanceof VarIndexed){
+            return translateVarIndexed((VarIndexed) v);
+        }
+        if(v instanceof VarSimple){
+            return translateVarSimple((VarSimple) v);
+        }
+        return null;
+    }
 
-    private Stm translateVarField(VarField v){return null;}
+    private Stm translateVarField(VarField v){
+        Var rec_v = v.var;
 
-    private Stm translateVarIndexed(VarIndexed v){return null;}
+        Stm rec_code = translateVar(rec_v);
 
-    private Stm translateVarSimple(VarSimple v){return null;}
+        if(rec_code == null){
+            return null;
+        }
+
+        if(!(rec_v.type instanceof NAME) || !(rec_v.type.actual() instanceof RECORD)){
+            err.error(v.pos,"Erro Semântico: Não é um registro.");
+            return null;
+        }
+
+        NAME rec_type = (NAME) rec_v.type;
+
+        TypeSymbol s = (TypeSymbol) TyEnv.getSymbol(rec_type.name_);
+
+        if(s == null){
+            err.error(v.pos, "Erro Semântico: Tipo não declarado.");
+            return null;
+        }
+        int offset = 0;
+        int size = 0;
+        Type aux_ty = null;
+
+        for(VarSymbol vs: s.fields){
+            if(vs.name == v.field_name){
+                aux_ty = vs.type;
+                size = vs.size;
+                break;
+            }
+            offset+=vs.size;
+        }
+
+        if(aux_ty == null){
+            err.error(v.pos, "Erro Semântico: Nenhum campo compatível com \""+v.field_name+"\" no registro.");
+            return null;
+        }
+
+        v.type = aux_ty;
+        v.mem_size = size;
+
+        return new MEM(new BINOP(PLUS, rec_code, new CONST(offset)));
+    }
+
+    private Stm translateVarIndexed(VarIndexed v){
+        Var arr_var = v.var;
+        ARRAY arr_type;
+
+        Stm arr_code = translateVar(arr_var);
+        Stm idx_code = translateExp(v.index);
+
+        if((arr_code == null)||(idx_code == null)){
+            return null;
+        }
+
+        if(!(arr_var.type.actual() instanceof ARRAY)){
+            err.error(v.pos,"Erro Semântico: Não é um arranjo.");
+            return null;
+        }
+        
+        arr_type = (ARRAY) arr_var.type.actual();
+
+        v.type = arr_type.elementsType_;
+        v.mem_size = arr_var.mem_size;
+        
+        return new MEM(new BINOP(PLUS,arr_code,new BINOP(TIMES,idx_code,new CONST(arr_var.mem_size))));
+    }
+
+    private Stm translateVarSimple(VarSimple v){
+        VarSymbol v_symb = (VarSymbol) VarEnv.getSymbol(v.name);
+        
+        if(v_symb == null){
+            err.error(v.pos,"Erro Semântico: Variável não declarada.");
+            return null;
+        }
+
+        v.type = v_symb.type;
+        v.mem_size = v_symb.size;
+
+        return new TEMP(v_symb.tmp);
+    }
 
     //Tradução de tipos
 
@@ -430,7 +525,7 @@ public class Semant {
 
     //{id:type_id,id:type_id,...}
     private Stm translateTyRec(TyRec v){
-        ArrayList<Integer> offsets = new ArrayList<Integer>();
+        ArrayList<VarSymbol> fds = new ArrayList<VarSymbol>();
         FieldTyList fields = v.field_types;
         TypeSymbol s;
 
@@ -452,14 +547,14 @@ public class Semant {
 
             aux = new RECORD(s.name, s.type, aux);
 
-            offsets.add(size);
+            fds.add(new VarSymbol(fields.field_id, s.type, 0, s.size));
 
             size+=s.size;            
         }
 
         v.type = aux;
         v.mem_size = size;
-        v.offsets = offsets;
+        v.fields = fds;
 
         return new EXP(new CONST(0));
     }

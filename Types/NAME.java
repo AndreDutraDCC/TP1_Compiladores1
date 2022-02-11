@@ -1,6 +1,5 @@
 package Types;
 
-import java.lang.annotation.Inherited;
 
 public class NAME extends Type {
     public NAME(String name) {
@@ -35,8 +34,6 @@ public class NAME extends Type {
         return actual().convertsTo(t);
     }
 
-
-
-    private String name_;
+    public String name_;
     private Type binding_;
 }

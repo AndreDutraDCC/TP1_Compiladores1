@@ -10,5 +10,5 @@ public class ARRAY extends Type {
         return this == t.actual();
     }
     
-    private Type elementsType_;
+    public Type elementsType_;
 }
