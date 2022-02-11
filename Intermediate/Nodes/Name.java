@@ -3,6 +3,7 @@ package Intermediate.Nodes;
 public class Name extends Stm {
     public Name(String name) {
         name_ = name;
+        children = null;
     }
 
     @Override

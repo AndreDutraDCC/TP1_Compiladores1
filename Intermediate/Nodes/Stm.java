@@ -1,5 +1,7 @@
 package Intermediate.Nodes;
 
+import java.util.ArrayList;
+
 public abstract class Stm {
     
     public String stringRepresentation(String prefix) {
@@ -12,12 +14,14 @@ public abstract class Stm {
         String res = "";
         if(children == null)
             return res;
-        for(int i = 0; i < children.length - 1; i++)
-            res += children[i].stringRepresentation(prefix + " ") + ",\n";
-        res += children[children.length - 1].stringRepresentation(prefix + " ");
+        for(int i = 0; i < children.size() - 1; i++)
+            if(children.get(i) != null)
+                res += children.get(i).stringRepresentation(prefix + " ") + ",\n";
+        if(children.get(children.size() - 1 ) != null)
+            res += children.get(children.size() - 1).stringRepresentation(prefix + " ");
         return res;
     }
 
     String name_;
-    public Stm[] children;
+    public ArrayList<Stm> children;
 }

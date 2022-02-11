@@ -1,9 +1,11 @@
 package Intermediate.Nodes;
 
+import java.util.ArrayList;
+
 public class MEM extends Stm {
     public MEM(Stm e) {
         name_ = "MEM";
-        children = new Stm[1];
-        children[0] = e;
+        children = new ArrayList<Stm>(1);
+        children.add(e);
     }
 }
