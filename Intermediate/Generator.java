@@ -9,8 +9,7 @@ public class Generator {
 
     public Generator() {
         currentScope_ = currentTemp_ = currentLabel_ = 0;
-        procedureTrees_ = new ArrayList<IntermediateTree>(1);
-        procedureTrees_.add(new IntermediateTree());
+        procedureStatements_ = new ArrayList<Stm>(1);
         procedureLabels_ = new ArrayList<String>(1);
         procedureLabels_.add(defaultProcedure);
         dataLabels_ = new Hashtable<Integer, String>();
@@ -44,24 +43,14 @@ public class Generator {
         return associatedId;
     }
 
-    // Adiciona um nó de instrução na árvore do procedimento do escopo atual
-    public void appendStatement(Stm s) {
-        procedureTrees_.get(currentScope_).appendNode(s);
-    }
-
-    // Cria um novo procedimento com o nome dado e o torna o escopo atual, retornando o ID do label associado
-    public int createProcedure(String procedureName) {
+    // Cria um novo procedimento com o nome dado atribuindo a ele a árvore cuja raiz é s. 
+    public int createProcedure(String procedureName, Stm s) {
         int lbl = getLabel();
         int scope = ++currentScope_;
         procAssociations_.put(procedureName, scope);
         procedureLabels_.add("L" + lbl);
-        procedureTrees_.add(new IntermediateTree());
+        procedureStatements_.add(s);
         return lbl;
-    }
-
-    // Torna o escopo do procedimento cujo nome é dado o escopo atual
-    public void goToProcedureScope(String procedureName) {
-        currentScope_ = procAssociations_.get(procedureName);
     }
 
     public String getVariableAssociations() {
@@ -123,7 +112,7 @@ public class Generator {
         for(int i = 0; i < numScopes; i++) {
             if(procedureLabels_.get(i) != "")
                 res += procedureLabels_.get(i) + ":\n";
-            res += procedureTrees_.get(i).getTreeString() + "\n";
+            res += procedureStatements_.get(i).stringRepresentation("") + "\n";
         }
         return res;
     }
@@ -131,7 +120,7 @@ public class Generator {
     private int currentTemp_;
     private int currentLabel_;
     private int currentScope_;
-    private ArrayList<IntermediateTree> procedureTrees_;
+    private ArrayList<Stm> procedureStatements_;
     private ArrayList<String> procedureLabels_;
     private Hashtable<Integer, String> dataLabels_;
     private Hashtable<String, String> varMapping_;
