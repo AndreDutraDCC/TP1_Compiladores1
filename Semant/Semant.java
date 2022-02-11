@@ -1,5 +1,8 @@
 package Semant;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import AbsSyn.*;
 import Types.*;
 
@@ -20,18 +23,19 @@ public class Semant {
         TyEnv = new SymbolTable();
         FunEnv = new SymbolTable();
 
-        //TODO: Instalar entradas na tabela de símbolos corretamente
-        TyEnv.installSymbol(new Symbol()); //int
-        TyEnv.installSymbol(new Symbol()); //string
+        TyEnv.installSymbol(new TypeSymbol("int", new INT(), 4)); //int
+        TyEnv.installSymbol(new TypeSymbol("string", new STRING(), 4)); //string
         
-        FunEnv.installSymbol(new Symbol()); //print
-        FunEnv.installSymbol(new Symbol()); //getchar
-        FunEnv.installSymbol(new Symbol()); //ord
-        FunEnv.installSymbol(new Symbol()); //chr
-        FunEnv.installSymbol(new Symbol()); //size
-        FunEnv.installSymbol(new Symbol()); //substring
-        FunEnv.installSymbol(new Symbol()); //concat
-        FunEnv.installSymbol(new Symbol()); //exit
+        //FunEnv.installSymbol(new FunctionSymbol("malloc",new VOID(), -1, 0, new ArrayList<Type>(List.of(new INT())))); //malloc
+        //FunEnv.installSymbol(new FunctionSymbol("initarray",new VOID(), -1, 0, new ArrayList<Type>(List.of(new INT(), new STRING())))); //initarray
+        FunEnv.installSymbol(new FunctionSymbol("print",new VOID(), -1, 0, new ArrayList<Type>(List.of(new STRING())))); //print
+        FunEnv.installSymbol(new FunctionSymbol("getchar",new STRING(), -1, 0, new ArrayList<Type>(List.of()))); //getchar
+        FunEnv.installSymbol(new FunctionSymbol("ord",new INT(), -1, 0, new ArrayList<Type>(List.of(new STRING())))); //ord
+        FunEnv.installSymbol(new FunctionSymbol("chr",new STRING(), -1, 0, new ArrayList<Type>(List.of(new INT())))); //chr
+        FunEnv.installSymbol(new FunctionSymbol("size",new INT(), -1, 0, new ArrayList<Type>(List.of(new STRING())))); //size
+        FunEnv.installSymbol(new FunctionSymbol("substring",new STRING(), -1, 0, new ArrayList<Type>(List.of(new STRING(), new INT(), new INT())))); //substring
+        FunEnv.installSymbol(new FunctionSymbol("concat",new STRING(), -1, 0, new ArrayList<Type>(List.of(new STRING(),new STRING())))); //concat
+        FunEnv.installSymbol(new FunctionSymbol("exit",new VOID(), -1, 0, new ArrayList<Type>(List.of(new INT())))); //exit
     }
 
     //TODO: Verificações extras do programa final
@@ -55,11 +59,143 @@ public class Semant {
         return null;
     }
 
-    private Stm translateDecVar(DecVar d){return null;}
+    //var id [: type_id] := exp
+    private Stm translateDecVar(DecVar d){
+        Stm content_code = translateExp(d.var_value);
+        Type var_ty;
+        int temp;
+        
+        if(content_code == null){//Propagação de erro na tradução da expressão
+            return null;
+        }
 
-    private Stm translateDecType(DecType d){return null;}
+        if(VarEnv.getSymbol(d.var_name) != null){
+            err.error(d.pos,"Erro Semântico: Variável de mesmo nome que \""+d.var_name+"\" já foi declarada.");
+            return null;
+        }
 
-    private Stm translateDecFunc(DecFunc d){return null;}
+        var_ty = d.var_value.type;
+
+        if(d.var_type != null){
+            if(TyEnv.getSymbol(d.var_type) == null){
+                err.error(d.pos,"Erro Semântico: tipo definido para a variável \""+d.var_name+"\" não foi declarado.");
+                return null;
+            }
+            var_ty = TyEnv.getSymbol(d.var_type).type;
+
+            if(!var_ty.convertsTo(d.var_value.type)){
+                err.error(d.pos,"Erro Semântico: tipos incompatíveis na declaração da variável \""+d.var_name+"\".");
+                return null;
+            }
+        }
+
+        temp = 0;
+        VarEnv.installSymbol(new VarSymbol(d.var_name, var_ty, temp, d.var_value.mem_size));
+
+        d.type = new VOID();
+        d.mem_size = 0;
+        return new MOVE(new TEMP(temp),content_code);
+    }
+
+    //type id = ty
+    private Stm translateDecType(DecType d){
+        NAME res_type;
+        TyRec body;
+        
+        if(translateTy(d.type_body) == null){
+            return null;
+        }
+
+        if(TyEnv.getSymbol(d.type_name) != null){
+            err.error(d.pos,"Erro Semântico: Tipo de mesmo nome já foi declarado.");
+            return null;
+        }
+
+        res_type = new NAME(d.type_name);
+        res_type.bind(d.type_body.type);
+
+        if(res_type.hasLoop()){
+            err.error(d.pos,"Erro Semântico: Declaração de tipo circular.");
+        }
+
+        if(d.type_body instanceof TyRec){
+            body = (TyRec) d.type_body;
+            TyEnv.installSymbol(new TypeSymbol(d.type_name, res_type, d.type_body.mem_size,body.offsets));
+        }
+        else{
+            TyEnv.installSymbol(new TypeSymbol(d.type_name, res_type, d.type_body.mem_size));
+        }
+
+        d.type = new VOID();
+        d.mem_size = 0;
+        return new EXP(new CONST(0));
+    }
+
+    //function id(params) [: type_id] := exp
+    private Stm translateDecFunc(DecFunc d){
+        FieldTyList params = d.param_types;
+        int temp;
+        ArrayList<Type> args = new ArrayList<Type>();
+
+        TypeSymbol ptype_s;
+
+        if(FunEnv.getSymbol(d.func_name) != null){
+            err.error(d.pos,"Erro Semântico: Função de mesmo nome já foi declarada.");
+        }
+        VarEnv.enterBlock();
+        
+
+        while(params != null){
+            ptype_s = (TypeSymbol) TyEnv.getSymbol(params.field_type);
+
+            if(ptype_s == null){
+                err.error(d.pos,"Erro Semântico: tipo do parâmetro não declarado.");
+                return null;
+            }
+            
+            temp = 0;
+
+            VarEnv.installSymbol(new VarSymbol(params.field_id, ptype_s.type,temp,ptype_s.size));
+
+            args.add(ptype_s.type);
+
+            params = params.tail;
+        }
+
+        Stm body_code = translateExp(d.body);
+
+        VarEnv.exitBlock();
+
+        if(body_code == null){
+            return null;
+        }
+
+        Type ret_type = new VOID();
+        int label;
+        
+        if(d.return_type != null){
+            ptype_s = (TypeSymbol) TyEnv.getSymbol(d.return_type);
+            if(ptype_s == null){
+                err.error(d.pos,"Erro Semântico: Tipo inválido de retorno da função \""+d.func_name+"\".");
+                return null;
+            }
+
+            ret_type = ptype_s.type;
+            if(!ret_type.convertsTo(d.body.type)){
+                err.error(d.pos,"Erro Semântico: Tipo da função \""+d.func_name+"\" incompatível com sua declaração.");
+                return null;
+            }
+
+            body_code = new MOVE(new TEMP(-2),body_code);
+        }
+        //TODO associar código da expressão ao label gerado
+        label = 0;
+         
+        d.type = new VOID();
+        d.mem_size = 0;
+        FunEnv.installSymbol(new FunctionSymbol(d.func_name, ret_type, label,  -1, args));
+        return new EXP(new CONST(0));
+    }
 
     
     //Tradução de expressões
@@ -197,17 +333,17 @@ public class Semant {
         
         Stm cond_code = translateExp(cond_);
         Stm then_code = translateExp(then_);
-        Stm else_code = translateExp(else_);
+        //Stm else_code = translateExp(else_);
 
         if(cond_code == null || then_code == null){
             return null;
         }
         if(!cond_.type.convertsTo(new INT())){
-            err.error(cond_.pos, "Erro Semântico: O teste do condicional deve ser do tipo inteiro.");
+            err.error(cond_.pos, "Erro Semântico: Tipo inválido, inteiro esperado.");
         }
         if(else_ != null){
             if(!then_.type.convertsTo(else_.type)){
-                err.error(e.pos, "Erro Semântico: Os tipos dos evaluandos do condicional devem ser iguais.");
+                err.error(e.pos, "Erro Semântico: As cláusulas then e else do if devem ser de mesmo tipo.");
             }
         }
         //If cond == 0 jump end
@@ -255,13 +391,78 @@ public class Semant {
 
     //Tradução de tipos
 
-    private Stm translateTy(Ty v){return null;}
+    private Stm translateTy(Ty v){
+        if(v instanceof TyArray){
+            return translateTyArray((TyArray) v);
+        }
+        if(v instanceof TyName){
+            return translateTyName((TyName) v);
+        }
+        if(v instanceof TyRec){
+            return translateTyRec((TyRec) v);
+        }
+        return null;
+    }
 
-    private Stm translateTyArray(TyArray v){return null;}
+    //array of type_id
+    private Stm translateTyArray(TyArray v){
+        TypeSymbol s = (TypeSymbol) TyEnv.getSymbol(v.elem_type);
+        if(s == null){
+            err.error(v.pos,"Erro Semântico: Tipo \""+v.elem_type+"\" não definido.");
+            return null;
+        }
+        v.type = new ARRAY(s.type);
+        v.mem_size = s.size;
+        return new EXP(new CONST(0));
+    }
 
-    private Stm translateTyName(TyName v){return null;}
+    //type-id
+    private Stm translateTyName(TyName v){
+        TypeSymbol s = (TypeSymbol) TyEnv.getSymbol(v.ty_name);
+        if(s == null){
+            err.error(v.pos,"Erro Semântico: Tipo \""+v.ty_name+"\" não definido.");
+            return null;
+        }
+        v.type = s.type;
+        v.mem_size = s.size;
+        return new EXP(new CONST(0));
+    }
 
-    private Stm translateTyRec(TyRec v){return null;}
+    //{id:type_id,id:type_id,...}
+    private Stm translateTyRec(TyRec v){
+        ArrayList<Integer> offsets = new ArrayList<Integer>();
+        FieldTyList fields = v.field_types;
+        TypeSymbol s;
+
+        RECORD aux = null;
+        int size = 0;
+
+        if(v.field_types == null){
+            err.error(v.pos,"Erro Semântico: Registro vazio.");
+            return null;
+        }
+
+        while(fields != null){
+            s = (TypeSymbol) TyEnv.getSymbol(fields.field_type);
+
+            if(s == null){
+                err.error(v.pos,"Erro Semântico: Tipo não definido.");
+                return null;
+            }
+
+            aux = new RECORD(s.name, s.type, aux);
+
+            offsets.add(size);
+
+            size+=s.size;            
+        }
+
+        v.type = aux;
+        v.mem_size = size;
+        v.offsets = offsets;
+
+        return new EXP(new CONST(0));
+    }
 
     //Tradução de listas
 
@@ -270,8 +471,6 @@ public class Semant {
     private Stm translateDecList(DecList d){return null;}
     
     private Stm translateFieldExpList(FieldExpList v){return null;}
-
-    private Stm translateFieldTyList(FieldTyList v){return null;}
 
     //funções auxiliares
 

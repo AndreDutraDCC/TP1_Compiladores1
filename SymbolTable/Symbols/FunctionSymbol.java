@@ -1,17 +1,22 @@
 package SymbolTable.Symbols;
 
 import Types.*;
+import java.util.ArrayList;
 
 public class FunctionSymbol extends Symbol {
     public FunctionSymbol() {
         super();
     }
 
-    public FunctionSymbol(String name, Type[] argList) {
-        //TODO Não sei se deve ser criado um tipo para funções. De qualquer forma, o tipo deve ser substituido aqui
-        super(name, null); 
+    public FunctionSymbol(String name, Type ret_type, int labl, int pointer, ArrayList<Type> argList) {
+        super(name, ret_type); 
         this.argList = argList;
+        label=labl;
+        stack_ptr = pointer;
     }
 
-    public Type[] argList;
+    public ArrayList<Type> argList;
+    public int label, stack_ptr;
 }
+
+

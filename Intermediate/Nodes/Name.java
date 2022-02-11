@@ -1,7 +1,7 @@
 package Intermediate.Nodes;
 
-public class NAME extends Stm {
-    public NAME(String name) {
+public class Name extends Stm {
+    public Name(String name) {
         name_ = name;
     }
 
