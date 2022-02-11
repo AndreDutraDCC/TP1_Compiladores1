@@ -8,6 +8,8 @@ public class TEMP extends Stm {
 
     @Override
     public String stringRepresentation(String prefix) {
+        if(id_ == -1)
+            return prefix + "TEMP fp";
         return prefix + "TEMP t" + id_;
     }
 
