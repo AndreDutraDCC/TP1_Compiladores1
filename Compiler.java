@@ -71,6 +71,11 @@ public class Compiler {
 		Yylex lexer = new Yylex(codeReader, err);
 		Exp res;
 		parser p = new parser(lexer, err);
+		if(options.listSource) {
+			System.out.println("Código fonte:\n");
+			System.out.println(source);
+			System.out.println(division);
+		}
 		try{
 			res = (Exp) p.parse().value;
 		}catch(Exception e){
@@ -78,25 +83,15 @@ public class Compiler {
 			return;
 		}
 		System.out.println("\nSintaxe Correta!\n");
-		Semant sem = new Semant(res, err);
-		Generator codeTree = sem.translateProgram();
-		if(codeTree == null) {
-			System.out.println("\nErro semântico!\n");
-			return;
-		}
-		System.out.println("\nSemântica Correta!");
-		System.out.println(division);
-		if(options.listSource) {
-			System.out.println("Código fonte:\n");
-			System.out.println(source);
-		}
 		if(options.displaySyntaxTree) {
-			System.out.println("\n" + division);
 			System.out.println("Árvore de sintaxe abstrata:");
 			res.print("");
-		}
-		if(options.displayIntermediate) {
 			System.out.println("\n" + division);
+		}
+		Semant sem = new Semant(res, err);
+		Generator codeTree = sem.translateProgram();
+		System.out.println("\nSemântica Correta!\n");
+		if(options.displayIntermediate) {
 			System.out.println("Código intermediário:\n");
 			System.out.println(codeTree.getVariableAssociations());
 			System.out.println(codeTree.getParameterAssociations());
