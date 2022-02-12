@@ -84,7 +84,8 @@ public class Semant {
             return null;
         }
 
-        if(VarEnv.getSymbolInBlock(d.var_name) != null){
+        //TODO
+        if(VarEnv.getSymbol/*InBlock*/(d.var_name) != null){
             err.error(d.pos,"Erro Semântico: Variável de mesmo nome que \""+d.var_name+"\" já foi declarada.");
             return null;
         }
@@ -120,7 +121,8 @@ public class Semant {
             return null;
         }
 
-        if(TyEnv.getSymbolInBlock(d.type_name) != null){
+        //TODO
+        if(TyEnv.getSymbol/*InBlock*/(d.type_name) != null){
             err.error(d.pos,"Erro Semântico: Tipo de mesmo nome já foi declarado.");
             return null;
         }
@@ -158,8 +160,8 @@ public class Semant {
         int size = 0;
 
         int s_id;
-
-        if(FunEnv.getSymbolInBlock(d.func_name) != null){
+        //TODO
+        if(FunEnv.getSymbol/*InBlock*/(d.func_name) != null){
             err.error(d.pos,"Erro Semântico: Função de mesmo nome já foi declarada.");
             return null;
         }
@@ -306,11 +308,11 @@ public class Semant {
         Exp left = e.e1;
         Exp right = e.e2;
 
-        Stm evall = translateExp(left);
-        Stm evalr = translateExp(right);
+        Stm l_code = translateExp(left);
+        Stm r_code = translateExp(right);
         Stm res_code = null;
 
-        if(left.type == null || right.type == null){
+        if(l_code == null || r_code == null){
             return null;
         }
 
@@ -320,12 +322,12 @@ public class Semant {
             case TIMES:
             case DIV:
                 if(!(left.type.convertsTo(new INT()) && right.type.convertsTo(new INT()))){
-                    err.error(e.pos,"Erro Semântico: Operandor aritmético não deve ser aplicado a operandos não inteiros.");
+                    err.error(e.pos,"Erro Semântico: Tipo inválido, inteiro esperado.");
                     return null;
                 }
                 e.type = new INT();
-                res_code = new BINOP(e.oper,evall,evalr);
-                break;
+                e.mem_size = 4;
+                return new BINOP(e.oper,l_code,r_code);
             case EQ:
             case NEQ:
                 if(left.type.convertsTo(new VOID()) || left.type.convertsTo(new VOID())){
@@ -333,10 +335,11 @@ public class Semant {
                     return null;
                 }
                 if(left.type.convertsTo(new NIL()) || left.type.convertsTo(new NIL())){
-                    err.error(e.pos,"Erro Semântico: Comparação não é definida para operandos do tipo NIL.");
+                    err.error(e.pos,"Erro Semântico: Comparação não é definida para ambos operandos do tipo NIL.");
                     return null;
                 }
                 e.type = new INT();
+                e.mem_size = 4;
                 //res_code = TODO BIN OP EQ NEQ
                 break;
             case LT:
@@ -344,7 +347,7 @@ public class Semant {
             case GT:
             case GTE:
                 if(!(left.type.convertsTo(new INT()) && right.type.convertsTo(new INT()))){
-                    err.error(e.pos,"Erro Semântico: Operador relacional não deve ser aplicado a operandos não inteiros.");
+                    err.error(e.pos,"Erro Semântico: Tipo inválido, inteiro esperado.");
                     return null;
                 }
                 e.type = new INT();
@@ -352,7 +355,7 @@ public class Semant {
             case AND:
             case OR:
                 if(!(left.type.convertsTo(new INT()) && right.type.convertsTo(new INT()))){
-                    err.error(e.pos,"Erro Semântico: Operador lógico não deve ser aplicado a operandos não inteiros.");
+                    err.error(e.pos,"Erro Semântico: Tipo inválido, inteiro esperado.");
                     return null;
                 }
                 e.type = new INT();
