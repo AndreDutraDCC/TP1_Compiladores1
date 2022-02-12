@@ -84,7 +84,7 @@ public class Semant {
             return null;
         }
 
-        if(VarEnv.getSymbol(d.var_name) != null){
+        if(VarEnv.getSymbolInBlock(d.var_name) != null){
             err.error(d.pos,"Erro Semântico: Variável de mesmo nome que \""+d.var_name+"\" já foi declarada.");
             return null;
         }
@@ -120,7 +120,7 @@ public class Semant {
             return null;
         }
 
-        if(TyEnv.getSymbol(d.type_name) != null){
+        if(TyEnv.getSymbolInBlock(d.type_name) != null){
             err.error(d.pos,"Erro Semântico: Tipo de mesmo nome já foi declarado.");
             return null;
         }
@@ -159,7 +159,7 @@ public class Semant {
 
         int s_id;
 
-        if(FunEnv.getSymbol(d.func_name) != null){
+        if(FunEnv.getSymbolInBlock(d.func_name) != null){
             err.error(d.pos,"Erro Semântico: Função de mesmo nome já foi declarada.");
             return null;
         }
@@ -512,13 +512,14 @@ public class Semant {
             err.error(e.pos,"Erro Semântico: Tipo não declarado: \""+e.arr_type+"\".");
             return null;
         }
-        ARRAY arr_ty = (ARRAY) s.type.actual();
+        
 
-        if(!(arr_ty instanceof ARRAY)){
+        if(!(s.type.actual() instanceof ARRAY)){
             err.error(e.pos,"Erro Semântico: Tipo \""+e.arr_type+"\" não é um array.");
             return null;
         }
 
+        ARRAY arr_ty = (ARRAY) s.type.actual();
         Type elem_type = arr_ty.elementsType_;
 
         if(!elem_type.convertsTo(e.val.type)){
@@ -537,6 +538,11 @@ public class Semant {
 
         if(s == null){
             err.error(e.pos,"Erro Semântico: tipo \""+e.rec_type+"\" não foi declarado.");
+            return null;
+        }
+
+        if(!(s.type instanceof NAME) || !(s.type.actual() instanceof RECORD)){
+            err.error(e.pos,"Erro Semântico: Não é um registro.");
             return null;
         }
 
@@ -736,7 +742,7 @@ public class Semant {
         Type aux_ty = null;
 
         for(VarSymbol vs: s.fields){
-            if(vs.name == v.field_name){
+            if(vs.name.equals(v.field_name)){
                 aux_ty = vs.type;
                 size = vs.size;
                 break;

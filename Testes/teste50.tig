@@ -1,6 +1,6 @@
 let
-    type person = {idd:int,num:int}
-    var i := person{idd=3,num=4}
+    var x:int :="hi"
+    var p := let var x:=0 var y:="hi" in let var x:= 2 in x end end
 in
 (
 )
