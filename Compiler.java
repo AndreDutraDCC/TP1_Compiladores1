@@ -9,13 +9,13 @@ import AbsSyn.*;
 import Semant.Semant;
 import Intermediate.*;
 
-public class Analisador{
+public class Compiler {
 	public static final String division = "===============================================================================";
 
 	public static void displayUsageError(String errorMessage) {
 		System.out.println("Erro: " + errorMessage);
 		System.out.println("\n" + division);
-		System.out.println("Uso correto: java Analisador nome_do_arquivo.tig [opções]\n");
+		System.out.println("Uso correto: java Compiler nome_do_arquivo.tig [opções]\n");
 		System.out.println("Em que as opções são:");
 		System.out.println("-absyn      Imprime na saída parão a representação da árvore de sintaxe abstrata");
 		System.out.println("-listinput  Imprime na saída padrão a listagem do código fonte de entrada");
