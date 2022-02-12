@@ -10,6 +10,8 @@ public class TEMP extends Stm {
     public String stringRepresentation(String prefix) {
         if(id_ == -1)
             return prefix + "TEMP fp";
+        else if(id_ == -2)
+            return prefix + "TEMP rv";
         return prefix + "TEMP t" + id_;
     }
 
