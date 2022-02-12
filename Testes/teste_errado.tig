@@ -4,5 +4,5 @@ let
 in
   Arranjo[2] = 10;
   Arranjo[3] = "Hello World";
-  Arranjo[4] = 5;
+  Arranjo[4] = 5
 end

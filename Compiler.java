@@ -79,7 +79,6 @@ public class Compiler {
 		try{
 			res = (Exp) p.parse().value;
 		}catch(Exception e){
-			System.out.println("\nErro de Sintaxe!\n");
 			return;
 		}
 		System.out.println("\nSintaxe Correta!\n");
@@ -90,6 +89,9 @@ public class Compiler {
 		}
 		Semant sem = new Semant(res, err);
 		Generator codeTree = sem.translateProgram();
+		if(codeTree == null){
+			return;
+		}
 		System.out.println("\nSemântica Correta!\n");
 		if(options.displayIntermediate) {
 			System.out.println("Código intermediário:\n");
