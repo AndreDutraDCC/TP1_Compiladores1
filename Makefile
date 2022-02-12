@@ -28,6 +28,4 @@ Grammar/sym.java Grammar/parser.java: Grammar/Grm.cup
 	cd Grammar; java -jar java-cup-11b.jar -expect 2 Grm.cup
 
 clean: 
-	rm -f Lexer/*.java Lexer/*.class Grammar/parser.java Grammar/*.class *.class ErrorHandle/*.class AbsSyn/*.class Intermediate/*.class
-
-	
+	rm -f Lexer/*.java Lexer/*.class Grammar/parser.java Grammar/sym.java Grammar/*.class *.class ErrorHandle/*.class AbsSyn/*.class Intermediate/*.class Intermediate/**/*.class Semant/*.class SymbolTable/*.class SymbolTable/**/*.class Types/*.class
