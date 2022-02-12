@@ -14,9 +14,9 @@ public class CALL extends Stm {
     @Override
     protected String childrenToString(String prefix) {
         String res = "";
-        res += children.get(0).stringRepresentation(" " + prefix) + "\n";
-        res += children.get(1).stringRepresentation("  " + prefix) + "\n";
-        res += children.get(2).stringRepresentation("  " + prefix);
+        for(int i = 0; i < children.size() - 1; i++)
+            res += children.get(i).stringRepresentation(" " + prefix) + "\n";
+        res += children.get(children.size() - 1).stringRepresentation("  " + prefix);
         return res;
     }
 }

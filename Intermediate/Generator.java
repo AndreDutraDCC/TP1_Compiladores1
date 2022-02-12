@@ -10,10 +10,12 @@ public class Generator {
     public Generator() {
         currentScope_ = currentTemp_ = currentLabel_ = 0;
         procedureStatements_ = new ArrayList<Stm>(1);
+        procedureStatements_.add(null);
         procedureLabels_ = new ArrayList<String>(1);
         procedureLabels_.add(defaultProcedure);
         dataLabels_ = new Hashtable<Integer, String>();
         varMapping_ = new Hashtable<String, String>();
+        parMapping_ = new Hashtable<String, String>();
         procAssociations_ = new Hashtable<String, Integer>();
     }
 
@@ -43,14 +45,26 @@ public class Generator {
         return associatedId;
     }
 
-    // Cria um novo procedimento com o nome dado atribuindo a ele a árvore cuja raiz é s. 
-    public int createProcedure(String procedureName, Stm s) {
+    // Cria um novo procedimento com o nome dado, retornando o id do escopo associado
+    public int createProcedure(String procedureName) {
+        if(procedureName == "")
+            return 0;
         int lbl = getLabel();
         int scope = ++currentScope_;
         procAssociations_.put(procedureName, scope);
+        procedureStatements_.add(null);
         procedureLabels_.add("L" + lbl);
-        procedureStatements_.add(s);
-        return lbl;
+        return scope;
+    }
+
+    // Retorna o label associado ao escopo (procedimento) cujo id é dado
+    public String labelFromScope(int scopeId) {
+        return procedureLabels_.get(scopeId);
+    }
+
+    // Associa o escopo cujo id é dado à árvore intermediária de raiz s
+    public void associateScope(int scopeId, Stm s) {
+        procedureStatements_.set(scopeId, s);
     }
 
     public String getVariableAssociations() {
@@ -102,7 +116,7 @@ public class Generator {
         keys = dataLabels_.keySet().toArray(keys);
         String res = "";
         for(int i = 0; i < keys.length; i++)
-            res += String.format("L%d = \"%s\"\n", i, dataLabels_.get(i));
+            res += String.format("L%d = \"%s\"\n", keys[i], dataLabels_.get(keys[i]));
         return res;
     }
 
