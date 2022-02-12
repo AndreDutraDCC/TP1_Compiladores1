@@ -1,3 +1,7 @@
 let
+    type person = {idd:int,num:int}
+    var i := person{idd=3,num=4}
 in
+(
+)
 end

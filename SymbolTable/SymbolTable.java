@@ -1,84 +1,48 @@
 package SymbolTable;
-import java.util.ArrayList;
-import java.util.Hashtable;
-import SymbolTable.Symbols.Symbol;
 
+import java.util.HashMap;
+import java.util.ArrayList;
+import SymbolTable.Symbols.*;
 
 public class SymbolTable {
-    public SymbolTable() {
-        level = -1;
-        table = new ArrayList<Symbol>();
-        scope = new ArrayList<Integer>();
-        thash = new Hashtable<String, Integer>();
+    public SymbolTable(){
+        Table = new ArrayList<HashMap<String,Symbol>>();
     }
 
-    public void enterBlock() {
-        level++;
-        scope.add(table.size());
+    public void enterBlock(){
+        Table.add(new HashMap<String,Symbol>());
     }
 
-    public void exitBlock() {
-        int s = table.size();
-        int b = scope.get(level);
-        while(s > b) {
-            s--;
-            if(table.get(s).collision >= 0)
-                thash.replace(table.get(s).name, table.get(s).collision);
-            else
-                thash.remove(table.get(s).name);
-            table.remove(s);
-        }
-        scope.remove(level);
-        level--;
+    public void exitBlock(){
+        Table.remove(Table.size() - 1);
     }
 
-    public Symbol getSymbol(String name) {
-        int k = getPositionFromHash(name);
-        while(k >= 0) {
-            if(table.get(k).name == name)
-                return table.get(k);
-            k = table.get(k).collision;
-        }
-        return null;
+    public void installSymbol(Symbol s){
+        HashMap<String,Symbol> last = Table.get(Table.size()-1);
+        last.put(s.name,s);
     }
 
-    public void installSymbol(Symbol newSymbol) throws SymbolError {
-        int k = getPositionFromHash(newSymbol.name);
-        while(k >= scope.get(level)) {
-            if(table.get(k).name == newSymbol.name)
-                throw new SymbolError(String.format("The symbol \"%s\" already exists on level %d!", newSymbol.name, newSymbol.level), null);
-            k = table.get(k).collision;
-        }
-        newSymbol.collision = getPositionFromHash(newSymbol.name);
-        newSymbol.level = level;
-        table.add(newSymbol);
-        thash.put(newSymbol.name, table.size() - 1);
-    }
-
-    public void removeSymbol(String symbolName) {
-        int k = getPositionFromHash(symbolName);
-        while(k >= 0) {
-            if(table.get(k).name == symbolName) {
-                if(table.get(k).collision >= 0)
-                    thash.replace(symbolName, table.get(k).collision);
-                else
-                    thash.remove(symbolName);
-                table.remove(k);
+    public Symbol getSymbol(String name){
+        Symbol res = null;
+        for(int i = Table.size()-1; i>= 0; i--){
+            res = Table.get(i).get(name);
+            if(res!=null){
+                break;
             }
-            k = table.get(k).collision;
         }
+        return res;
     }
 
-    private int getPositionFromHash(String name) {
-        try{
-            return thash.get(name);
-        }catch(NullPointerException e) {
-            return -1;
+    public void removeSymbol(String name){
+        Symbol res = null;
+        for(int i = Table.size()-1; i>= 0; i--){
+            res = Table.get(i).get(name);
+            if(res!=null){
+                Table.get(i).remove(name);
+                break;
+            }
         }
     }
     
-    private ArrayList<Symbol> table;
-    private ArrayList<Integer> scope;
-    private Hashtable<String, Integer> thash;
-    private int level;
+    private ArrayList<HashMap<String,Symbol>> Table;
 }

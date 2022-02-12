@@ -44,7 +44,7 @@ public class Semant {
     public Generator translateProgram(){
         Stm prog_code = translateExp(prog);
 
-        if(prog == null){
+        if(prog_code == null){
             return null;
         }
         
@@ -76,9 +76,9 @@ public class Semant {
 
     //var id [: type_id] := exp
     private Stm translateDecVar(DecVar d){
+        int temp = code_tree.temporaryFromVariable(d.var_name);;
         Stm content_code = translateExp(d.var_value);
         Type var_ty;
-        int temp;
         
         if(content_code == null){//Propagação de erro na tradução da expressão
             return null;
@@ -103,8 +103,6 @@ public class Semant {
                 return null;
             }
         }
-
-        temp = code_tree.temporaryFromVariable(d.var_name);
 
         VarEnv.installSymbol(new VarSymbol(d.var_name, var_ty, temp, d.var_value.mem_size));
 
@@ -421,6 +419,7 @@ public class Semant {
     //TODO fim das expressões não implementadas
 
     private Stm translateExpCall(ExpCall e){
+
         FunctionSymbol s = (FunctionSymbol) FunEnv.getSymbol(e.func_name);
         ExpList aux_list;
         ArrayList<Stm> code_list = new ArrayList<Stm>();
@@ -457,6 +456,7 @@ public class Semant {
             }
 
             code_list.add(aux_code);
+            aux_list = aux_list.tail;
         }
         if(aux_list != null){
             err.error(e.pos,"Erro Semântico: Número inválido de argumentos na chamada da função \""+e.func_name+"\".");
@@ -465,7 +465,13 @@ public class Semant {
 
         e.type = s.type;
         e.mem_size = s.size;
-        return new CALL(new Name(s.label), code_list);
+
+        Stm f_code = new CALL(new Name(s.label), code_list);
+        
+        if(s.type.convertsTo(new VOID())){
+            f_code = new EXP(f_code);
+        }
+        return f_code;
     }
 
     private Stm translateExpAttr(ExpAttr e){
@@ -478,6 +484,7 @@ public class Semant {
 
         if(!e.var.type.convertsTo(e.val.type)){
             err.error(e.pos,"Erro Semântico: Tipos incompatíveis na atribuição.");
+            return null;
         }
 
         e.type = new VOID();
@@ -592,8 +599,15 @@ public class Semant {
             aux_list = aux_list.tail;
         }
 
-        e.type = aux_exp.type;
-        e.mem_size = aux_exp.mem_size;
+        if(aux_exp != null){
+            e.type = aux_exp.type;
+            e.mem_size = aux_exp.mem_size;
+        }
+        else{
+            e.type = new VOID();
+            e.mem_size = 0;
+        }
+        
 
         if(code_list.isEmpty()){
             return new EXP(new CONST(0));
@@ -844,7 +858,9 @@ public class Semant {
 
             fds.add(new VarSymbol(fields.field_id, s.type, 0, s.size));
 
-            size+=s.size;            
+            size+=s.size;   
+            
+            fields = fields.tail;
         }
 
         v.type = aux;

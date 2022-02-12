@@ -5,6 +5,8 @@ import java.util.ArrayList;
 public class CALL extends Stm {
     public CALL(Stm function, ArrayList<Stm> args) {
         name_ = "CALL";
+        children = new ArrayList<Stm>();
+        
         children.add(function);
         for(Stm arg: args){
             children.add(arg);
