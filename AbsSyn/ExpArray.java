@@ -3,9 +3,9 @@ package AbsSyn;
 
 
 public class ExpArray extends Exp {
-    String arr_type;
-    Exp len;
-    Exp val;
+    public String arr_type;
+    public Exp len;
+    public Exp val;
 
     public ExpArray(int p, String typ, Exp l, Exp v){
         super();
