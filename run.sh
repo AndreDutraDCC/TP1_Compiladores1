@@ -1,1 +1,1 @@
-java -cp .:Grammar/java-cup-11b-runtime.jar Analisador $@
+java -cp .:Grammar/java-cup-11b-runtime.jar Compiler $@

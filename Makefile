@@ -1,9 +1,9 @@
 abssyntarget = 
 absdeps = AbsSyn/AbsNode.java AbsSyn/DecFunc.java AbsSyn/Dec.java AbsSyn/DecList.java AbsSyn/DecType.java AbsSyn/DecVar.java AbsSyn/ExpArray.java AbsSyn/ExpAttr.java AbsSyn/ExpBreak.java AbsSyn/ExpCall.java AbsSyn/ExpFor.java AbsSyn/ExpIf.java AbsSyn/ExpInt.java AbsSyn/Exp.java AbsSyn/ExpLet.java AbsSyn/ExpList.java AbsSyn/ExpNil.java AbsSyn/ExpOp.java AbsSyn/ExpRec.java AbsSyn/ExpSeq.java AbsSyn/ExpString.java AbsSyn/ExpWhile.java AbsSyn/FieldExpList.java AbsSyn/FieldTyList.java AbsSyn/TyArray.java AbsSyn/Ty.java AbsSyn/TyName.java AbsSyn/TyRec.java AbsSyn/VarField.java AbsSyn/VarIndexed.java AbsSyn/Var.java AbsSyn/VarSimple.java 
-all: Analisador.class
+all: Compiler.class
 
-Analisador.class: Analisador.java Grammar/parser.class Grammar/sym.class Lexer/Yylex.class ErrorHandle/ErrorMsg.class
-	javac -cp Grammar/java-cup-11b-runtime.jar:. Analisador.java
+Compiler.class: Compiler.java Grammar/parser.class Grammar/sym.class Lexer/Yylex.class ErrorHandle/ErrorMsg.class
+	javac -cp Grammar/java-cup-11b-runtime.jar:. Compiler.java
 
 Grammar/parser.class: Grammar/parser.java Lexer/Yylex.class Grammar/sym.class AbsSyn/*.class ErrorHandle/ErrorMsg.class
 	javac -cp Grammar/java-cup-11b-runtime.jar:. Grammar/parser.java
