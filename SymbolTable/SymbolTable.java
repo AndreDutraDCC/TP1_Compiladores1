@@ -1,15 +1,16 @@
 package SymbolTable;
 import java.util.ArrayList;
-import java.util.Hashtable;
+import java.util.HashMap;
 import SymbolTable.Symbols.Symbol;
 
 
 public class SymbolTable {
     public SymbolTable() {
-        level = -1;
+        level = 0;
         table = new ArrayList<Symbol>();
         scope = new ArrayList<Integer>();
-        thash = new Hashtable<String, Integer>();
+        thash = new HashMap<String, Integer>();
+        scope.add(0);
     }
 
     public void enterBlock() {
@@ -35,7 +36,17 @@ public class SymbolTable {
     public Symbol getSymbol(String name) {
         int k = getPositionFromHash(name);
         while(k >= 0) {
-            if(table.get(k).name == name)
+            if(table.get(k).name.equals(name))
+                return table.get(k);
+            k = table.get(k).collision;
+        }
+        return null;
+    }
+
+    public Symbol getSymbolInBlock(String name) {
+        int k = getPositionFromHash(name);
+        while(k >= scope.get(scope.size() - 1)) {
+            if(table.get(k).name.equals(name))
                 return table.get(k);
             k = table.get(k).collision;
         }
@@ -45,7 +56,7 @@ public class SymbolTable {
     public void installSymbol(Symbol newSymbol) throws SymbolError {
         int k = getPositionFromHash(newSymbol.name);
         while(k >= scope.get(level)) {
-            if(table.get(k).name == newSymbol.name)
+            if(table.get(k).name.equals(newSymbol.name))
                 throw new SymbolError(String.format("The symbol \"%s\" already exists on level %d!", newSymbol.name, newSymbol.level), null);
             k = table.get(k).collision;
         }
@@ -58,7 +69,7 @@ public class SymbolTable {
     public void removeSymbol(String symbolName) {
         int k = getPositionFromHash(symbolName);
         while(k >= 0) {
-            if(table.get(k).name == symbolName) {
+            if(table.get(k).name.equals(symbolName)) {
                 if(table.get(k).collision >= 0)
                     thash.replace(symbolName, table.get(k).collision);
                 else
@@ -79,6 +90,6 @@ public class SymbolTable {
     
     private ArrayList<Symbol> table;
     private ArrayList<Integer> scope;
-    private Hashtable<String, Integer> thash;
+    private HashMap<String, Integer> thash;
     private int level;
 }
