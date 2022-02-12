@@ -26,8 +26,6 @@ public class Semant {
         TyEnv = new SymbolTable();
         FunEnv = new SymbolTable();
 
-        enterBlock();
-
         TyEnv.installSymbol(new TypeSymbol("int", new INT(), 4)); //int
         TyEnv.installSymbol(new TypeSymbol("string", new STRING(), 4)); //string
         
