@@ -4,6 +4,8 @@ import Lexer.*;
 import Grammar.*;
 import ErrorHandle.*;
 import AbsSyn.*;
+import Semant.Semant;
+import Intermediate.*;
 
 public class Analisador{
 	public static void analisar(String filename) throws Exception{
@@ -37,7 +39,18 @@ public class Analisador{
 			System.out.println("\nErro de Sintaxe.\n");
 			return;}
 		System.out.println("\nSintaxe Correta.\n");
-		
+
+		System.out.println("\n===============================================================================");
+		System.out.println("Código Intermediário:\n");
+
+		Semant sem = new Semant(res,err);
+		Generator code_tree = sem.translateProgram();
+		if(code_tree!=null){
+			System.out.println(code_tree.getVariableAssociations());
+			System.out.println(code_tree.getParameterAssociations());
+			System.out.println(code_tree.genIntermediateCode());
+			System.out.println(code_tree.getDataLabelsString());
+		}		
 	}
 	public static void main(String[] args) throws Exception{
 		for(String arg: args){

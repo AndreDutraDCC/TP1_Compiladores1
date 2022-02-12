@@ -26,20 +26,22 @@ public class Semant {
         TyEnv = new SymbolTable();
         FunEnv = new SymbolTable();
 
+        enterBlock();
+
         TyEnv.installSymbol(new TypeSymbol("int", new INT(), 4)); //int
         TyEnv.installSymbol(new TypeSymbol("string", new STRING(), 4)); //string
         
-        FunEnv.installSymbol(new FunctionSymbol("print",new VOID(), -1, 0, new ArrayList<Type>(List.of(new STRING())))); //print
-        FunEnv.installSymbol(new FunctionSymbol("getchar",new STRING(), -1, 0, new ArrayList<Type>(List.of()))); //getchar
-        FunEnv.installSymbol(new FunctionSymbol("ord",new INT(), -1, 0, new ArrayList<Type>(List.of(new STRING())))); //ord
-        FunEnv.installSymbol(new FunctionSymbol("chr",new STRING(), -1, 0, new ArrayList<Type>(List.of(new INT())))); //chr
-        FunEnv.installSymbol(new FunctionSymbol("size",new INT(), -1, 0, new ArrayList<Type>(List.of(new STRING())))); //size
-        FunEnv.installSymbol(new FunctionSymbol("substring",new STRING(), -1, 0, new ArrayList<Type>(List.of(new STRING(), new INT(), new INT())))); //substring
-        FunEnv.installSymbol(new FunctionSymbol("concat",new STRING(), -1, 0, new ArrayList<Type>(List.of(new STRING(),new STRING())))); //concat
-        FunEnv.installSymbol(new FunctionSymbol("exit",new VOID(), -1, 0, new ArrayList<Type>(List.of(new INT())))); //exit
+        FunEnv.installSymbol(new FunctionSymbol("print",new VOID(), "print", 0,new ArrayList<Type>(List.of(new STRING())),true)); //print
+        FunEnv.installSymbol(new FunctionSymbol("getchar",new STRING(), "getchar", 4, new ArrayList<Type>(List.of()),true)); //getchar
+        FunEnv.installSymbol(new FunctionSymbol("ord",new INT(), "ord", 4, new ArrayList<Type>(List.of(new STRING())),true)); //ord
+        FunEnv.installSymbol(new FunctionSymbol("chr",new STRING(), "chr", 4, new ArrayList<Type>(List.of(new INT())),true)); //chr
+        FunEnv.installSymbol(new FunctionSymbol("size",new INT(), "size", 4, new ArrayList<Type>(List.of(new STRING())),true)); //size
+        FunEnv.installSymbol(new FunctionSymbol("substring",new STRING(), "substring", 4, new ArrayList<Type>(List.of(new STRING(), new INT(), new INT())),true)); //substring
+        FunEnv.installSymbol(new FunctionSymbol("concat",new STRING(), "concat", 4, new ArrayList<Type>(List.of(new STRING(),new STRING())),true)); //concat
+        FunEnv.installSymbol(new FunctionSymbol("exit",new VOID(), "exit", 0, new ArrayList<Type>(List.of(new INT())),true)); //exit
     }
 
-    public Stm translateProgram(){
+    public Generator translateProgram(){
         Stm prog_code = translateExp(prog);
 
         if(prog == null){
@@ -49,9 +51,11 @@ public class Semant {
         if(prog_code.isExp()){
             prog_code = new EXP(prog_code);
         }
-        //TODO instalar label
-        //Generator root
-        return null;
+
+        int s_id = code_tree.createProcedure("");
+        code_tree.associateScope(s_id,prog_code);
+
+        return code_tree;
     }
 
     //Tradução de declarações
@@ -149,11 +153,13 @@ public class Semant {
         int temp;
         ArrayList<Type> args = new ArrayList<Type>();
 
-        TypeSymbol ptype_s;
+        TypeSymbol ptype_s = null;
         FunctionSymbol this_func;
 
         Type ret_type = new VOID();
-        int label;
+        int size = 0;
+
+        int s_id;
 
         if(FunEnv.getSymbol(d.func_name) != null){
             err.error(d.pos,"Erro Semântico: Função de mesmo nome já foi declarada.");
@@ -168,11 +174,11 @@ public class Semant {
             }
 
             ret_type = ptype_s.type;
+            size = ptype_s.size;
         }
 
-        //TODO label
-        label = 0;
-        FunEnv.installSymbol(new FunctionSymbol(d.func_name, ret_type, label, -1, null));
+        s_id = code_tree.createProcedure(d.func_name);
+        FunEnv.installSymbol(new FunctionSymbol(d.func_name, ret_type, code_tree.labelFromScope(s_id), size, null));
         
         VarEnv.enterBlock();
 
@@ -213,6 +219,8 @@ public class Semant {
 
             body_code = new MOVE(new TEMP(-2),body_code);
         }
+
+        code_tree.associateScope(s_id, body_code);
          
         d.type = new VOID();
         d.mem_size = 0;
@@ -282,8 +290,8 @@ public class Semant {
     private Stm translateExpString(ExpString e){
         e.type = new STRING();
         e.mem_size = 4;
-        //TODO LABEL STRING
-        String label = String.valueOf(2);
+
+        String label = "L"+String.valueOf(code_tree.makeDataLabel(e.val));
 
         return new Name(label);
     }
@@ -410,11 +418,55 @@ public class Semant {
 
     private Stm translateExpWhile(ExpWhile e){return null;}
 
-    private Stm translateExpCall(ExpCall e){
-        return null;
-    }
+    //TODO fim das expressões não implementadas
 
-//TODO marcador do fim das expressões não implementadas
+    private Stm translateExpCall(ExpCall e){
+        FunctionSymbol s = (FunctionSymbol) FunEnv.getSymbol(e.func_name);
+        ExpList aux_list;
+        ArrayList<Stm> code_list = new ArrayList<Stm>();
+        Stm aux_code;
+        
+        if(s == null){
+            err.error(e.pos,"Erro Semântico: Função não declarada.");
+            return null;
+        }
+        
+        if(s.is_native){
+            code_list.add(new CONST(0));
+        }
+        else{
+            code_list.add(new TEMP(-1));
+        }
+        
+        aux_list = e.args;
+        for(Type arg_t: s.argList){
+            if(aux_list == null){
+                err.error(e.pos,"Erro Semântico: Número inválido de argumentos na chamada da função \""+e.func_name+"\".");
+                return null;
+            }
+            
+            aux_code = translateExp(aux_list.head);
+
+            if(aux_code == null){
+                return null;
+            }
+
+            if(!arg_t.convertsTo(aux_list.head.type)){
+                err.error(e.pos,"Erro Semântico: Tipos de parâmetros incompatíveis na chamada da função \""+e.func_name+"\".");
+                return null;
+            }
+
+            code_list.add(aux_code);
+        }
+        if(aux_list != null){
+            err.error(e.pos,"Erro Semântico: Número inválido de argumentos na chamada da função \""+e.func_name+"\".");
+            return null;
+        }
+
+        e.type = s.type;
+        e.mem_size = s.size;
+        return new CALL(new Name(s.label), code_list);
+    }
 
     private Stm translateExpAttr(ExpAttr e){
         Stm var_code = translateVar(e.var);

@@ -1,8 +1,8 @@
 package AbsSyn;
 
 public class ExpCall extends Exp {
-    String func_name;
-    ExpList args;
+    public String func_name;
+    public ExpList args;
 
     public ExpCall(int p, String id, ExpList ars){
         super();
