@@ -2,6 +2,7 @@ package Semant;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Stack;
 
 import AbsSyn.*;
 import Types.*;
@@ -19,6 +20,8 @@ public class Semant {
     public Semant(Exp program, ErrorMsg error){
         prog = program;
         err = error;
+
+        loop_ends = new Stack<String>();
 
         code_tree = new Generator();
 
@@ -82,8 +85,7 @@ public class Semant {
             return null;
         }
 
-        //TODO
-        if(VarEnv.getSymbol/*InBlock*/(d.var_name) != null){
+        if(VarEnv.getSymbolInBlock(d.var_name) != null){
             err.error(d.pos,"Erro Semântico: Variável de mesmo nome que \""+d.var_name+"\" já foi declarada.");
             return null;
         }
@@ -119,8 +121,8 @@ public class Semant {
             return null;
         }
 
-        //TODO
-        if(TyEnv.getSymbol/*InBlock*/(d.type_name) != null){
+        
+        if(TyEnv.getSymbolInBlock(d.type_name) != null){
             err.error(d.pos,"Erro Semântico: Tipo de mesmo nome já foi declarado.");
             return null;
         }
@@ -158,8 +160,8 @@ public class Semant {
         int size = 0;
 
         int s_id;
-        //TODO
-        if(FunEnv.getSymbol/*InBlock*/(d.func_name) != null){
+        
+        if(FunEnv.getSymbolInBlock(d.func_name) != null){
             err.error(d.pos,"Erro Semântico: Função de mesmo nome já foi declarada.");
             return null;
         }
@@ -301,14 +303,16 @@ public class Semant {
         return new CONST(0);
     }
 
-    //TODO início das não implementadas
+    
     private Stm translateExpOp(ExpOp e){
         Exp left = e.e1;
         Exp right = e.e2;
 
         Stm l_code = translateExp(left);
         Stm r_code = translateExp(right);
-        Stm res_code = null;
+
+        int temp;
+        String L1,L2,L3;
 
         if(l_code == null || r_code == null){
             return null;
@@ -328,18 +332,22 @@ public class Semant {
                 return new BINOP(e.oper,l_code,r_code);
             case EQ:
             case NEQ:
-                if(left.type.convertsTo(new VOID()) || left.type.convertsTo(new VOID())){
-                    err.error(e.pos,"Erro Semântico: Comparação não é definida para operandos sem valor de retorno (VOID).");
+                if(left.type.convertsTo(new VOID()) || right.type.convertsTo(new VOID()) || (right.type.actual() instanceof RECORD) || !left.type.convertsTo(right.type)){
+                    err.error(e.pos,"Erro Semântico: Tipo inválido.");
                     return null;
                 }
-                if(left.type.convertsTo(new NIL()) || left.type.convertsTo(new NIL())){
+                if(left.type.convertsTo(new NIL()) || right.type.convertsTo(new NIL())){
                     err.error(e.pos,"Erro Semântico: Comparação não é definida para ambos operandos do tipo NIL.");
                     return null;
                 }
                 e.type = new INT();
                 e.mem_size = 4;
-                //res_code = TODO BIN OP EQ NEQ
-                break;
+
+                temp = code_tree.getTemporary();
+                L1 = "L"+String.valueOf(code_tree.getLabel());
+                L2 = "L"+String.valueOf(code_tree.getLabel());
+                L3 = "L"+String.valueOf(code_tree.getLabel());
+                return new ESEQ(new SEQ(new CJUMP(e.oper,l_code,r_code,new Name(L1),new Name(L2)),new SEQ(new LABEL(L1),new SEQ(new MOVE(new TEMP(temp),new CONST(1)),new SEQ(new JUMP(new Name(L3)),new SEQ(new LABEL(L2),new SEQ(new MOVE(new TEMP(temp),new CONST(0)),new LABEL(L3))))))),new TEMP(temp));
             case LT:
             case LTE:
             case GT:
@@ -349,18 +357,45 @@ public class Semant {
                     return null;
                 }
                 e.type = new INT();
-                //res_code = TODO BIN OP REL
+                e.mem_size = 4;
+
+                temp = code_tree.getTemporary();
+                L1 = "L"+String.valueOf(code_tree.getLabel());
+                L2 = "L"+String.valueOf(code_tree.getLabel());
+                L3 = "L"+String.valueOf(code_tree.getLabel());
+                return new ESEQ(new SEQ(new CJUMP(e.oper,l_code,r_code,new Name(L1),new Name(L2)),new SEQ(new LABEL(L1),new SEQ(new MOVE(new TEMP(temp),new CONST(1)),new SEQ(new JUMP(new Name(L3)),new SEQ(new LABEL(L2),new SEQ(new MOVE(new TEMP(temp),new CONST(0)),new LABEL(L3))))))),new TEMP(temp));
+
+
             case AND:
+                if(!(left.type.convertsTo(new INT()) && right.type.convertsTo(new INT()))){
+                    err.error(e.pos,"Erro Semântico: Tipo inválido, inteiro esperado.");
+                    return null;
+                }
+                e.type = new INT();
+                e.mem_size = 4;
+
+                temp = code_tree.getTemporary();
+                L1 = "L"+String.valueOf(code_tree.getLabel());
+                L2 = "L"+String.valueOf(code_tree.getLabel());
+                L3 = "L"+String.valueOf(code_tree.getLabel());
+                return new ESEQ(new SEQ(new CJUMP(NEQ,new BINOP(TIMES,l_code,r_code),new CONST(0),new Name(L1),new Name(L2)),new SEQ(new LABEL(L1),new SEQ(new MOVE(new TEMP(temp),new CONST(1)),new SEQ(new JUMP(new Name(L3)),new SEQ(new LABEL(L2),new SEQ(new MOVE(new TEMP(temp),new CONST(0)),new LABEL(L3))))))),new TEMP(temp));
+
             case OR:
                 if(!(left.type.convertsTo(new INT()) && right.type.convertsTo(new INT()))){
                     err.error(e.pos,"Erro Semântico: Tipo inválido, inteiro esperado.");
                     return null;
                 }
                 e.type = new INT();
-                //res_code = TODO BIN OP LOG
+                e.mem_size = 4;
+
+                temp = code_tree.getTemporary();
+                L1 = "L"+String.valueOf(code_tree.getLabel());
+                L2 = "L"+String.valueOf(code_tree.getLabel());
+                L3 = "L"+String.valueOf(code_tree.getLabel());
+                return new ESEQ(new SEQ(new CJUMP(NEQ,new BINOP(PLUS,l_code,r_code),new CONST(0),new Name(L1),new Name(L2)),new SEQ(new LABEL(L1),new SEQ(new MOVE(new TEMP(temp),new CONST(1)),new SEQ(new JUMP(new Name(L3)),new SEQ(new LABEL(L2),new SEQ(new MOVE(new TEMP(temp),new CONST(0)),new LABEL(L3))))))),new TEMP(temp));
                 
         }
-        return res_code;
+        return null;
     }
 
     private Stm translateExpIf(ExpIf e){
@@ -370,7 +405,10 @@ public class Semant {
         
         Stm cond_code = translateExp(cond);
         Stm then_code = translateExp(then);
-        Stm else_code;
+        Stm else_code = null;
+
+        int temp;
+        String L1,L2,L3;
 
         if(cond_code == null || then_code == null){
             return null;
@@ -404,20 +442,120 @@ public class Semant {
 
             e.type = then.type;
             e.mem_size = then.mem_size;
+
+            if(!then.type.convertsTo(new VOID())){
+                temp = code_tree.getTemporary();
+                then_code = new MOVE(new TEMP(temp),then_code);
+                else_code = new MOVE(new TEMP(temp),else_code);
+
+                L1 = "L"+String.valueOf(code_tree.getLabel());
+                L2 = "L"+String.valueOf(code_tree.getLabel());
+                L3 = "L"+String.valueOf(code_tree.getLabel());
+                return new ESEQ(new SEQ(new CJUMP(NEQ,cond_code,new CONST(0),new Name(L1),new Name(L2)),new SEQ(new LABEL(L1),new SEQ(new MOVE(new TEMP(temp),then_code),new SEQ(new JUMP(new Name(L3)),new SEQ(new LABEL(L2),new SEQ(new MOVE(new TEMP(temp),else_code),new LABEL(L3))))))),new TEMP(temp));
+            }
         }
 
 
-        return null;
+        L1 = "L"+String.valueOf(code_tree.getLabel());
+        L2 = "L"+String.valueOf(code_tree.getLabel());
+        L3 = "L"+String.valueOf(code_tree.getLabel());
+        return new SEQ(new CJUMP(NEQ,cond_code,new CONST(0),new Name(L1),new Name(L2)),new SEQ(new LABEL(L1),new SEQ(then_code,new SEQ(new JUMP(new Name(L3)),new SEQ(new LABEL(L2),new SEQ(else_code,new LABEL(L3)))))));
     }
 
+    private Stm translateExpBreak(ExpBreak e){
+        if(loop_ends.isEmpty()){
+            err.error(e.pos,"Erro Semântico: Cláusulas break só devem ser chamadas dentro de loops for e while.");
+            return null;
+        }
+        e.type = new VOID();
+        e.mem_size = 0;
+        return new JUMP(new Name(loop_ends.peek()));
+    }
+    
+    private Stm translateExpFor(ExpFor e){
+        String L1,L2,L3;
 
-    private Stm translateExpBreak(ExpBreak e){return null;}
+        L1 = "L"+String.valueOf(code_tree.getLabel());
+        L2 = "L"+String.valueOf(code_tree.getLabel());
+        L3 = "L"+String.valueOf(code_tree.getLabel());
 
-    private Stm translateExpFor(ExpFor e){return null;}
+        VarEnv.enterBlock();
+        loop_ends.push(L3);
 
-    private Stm translateExpWhile(ExpWhile e){return null;}
+        Stm var_code = translateDecVar(e.itr_var);
 
-    //TODO fim das expressões não implementadas
+        if(var_code == null){
+            return null;
+        }
+
+        VarSymbol s = (VarSymbol) VarEnv.getSymbol(e.itr_var.var_name);
+        int t1 = s.tmp;
+
+        Stm end_code = translateExp(e.itr_end);
+        Stm body_code = translateExp(e.body);
+
+        loop_ends.pop();
+        VarEnv.exitBlock();
+
+        if(end_code == null || body_code == null){
+            return null;
+        }
+
+        if(!e.itr_end.type.convertsTo(new INT())){
+            err.error(e.itr_end.pos,"Erro Semântico: Valor final do índice do for deve ser inteiro.");
+            return null;
+        }
+
+        if(!e.body.type.convertsTo(new VOID())){
+            err.error(e.itr_end.pos,"Erro Semântico: Tipo inválido, VOID esperado.");
+            return null;
+        }
+
+        int t2 = code_tree.getTemporary();
+
+        e.type = new VOID();
+        e.mem_size = 0;
+
+        return new SEQ(var_code,new SEQ(new MOVE(new TEMP(t2),end_code), new SEQ(new CJUMP(LTE, new TEMP(t1), new TEMP(t2),new Name(L1),new Name(L3)),new SEQ(new LABEL(L1),new SEQ(body_code,new SEQ(new CJUMP(LT,new TEMP(t1),new TEMP(t2),new Name(L2),new Name(L3)),new SEQ(new LABEL(L2),new SEQ(new MOVE(new TEMP(t1), new BINOP(PLUS, new TEMP(t1),new CONST(1))),new SEQ(new JUMP(new Name(L1)),new LABEL(L3))))))))));
+    }
+
+    private Stm translateExpWhile(ExpWhile e){
+        String L1,L2,L3;
+
+        L1 = "L"+String.valueOf(code_tree.getLabel());
+        L2 = "L"+String.valueOf(code_tree.getLabel());
+        L3 = "L"+String.valueOf(code_tree.getLabel());
+
+        Stm cond_code = translateExp(e.cond);
+
+        if(cond_code ==null){
+            return null;
+        }
+
+        if(!e.cond.type.convertsTo(new INT())){
+            err.error(e.cond.pos,"Erro Semântico: Inteiro esperado.");
+            return null;
+        }
+
+        loop_ends.push(L3);
+
+        Stm body_code = translateExp(e.body);
+
+        loop_ends.pop();
+
+        if(body_code == null){
+            return null;
+        }
+
+        if(!e.body.type.convertsTo(new VOID())){
+            err.error(e.body.pos,"Erro Semântico: VOID esperado.");
+            return null;
+        }
+
+        e.type = new VOID();
+        e.mem_size = 0;
+        return new SEQ(new LABEL(L1), new SEQ( new CJUMP(EQ,cond_code,new CONST(0),new Name(L3),new Name(L2)),new SEQ(new LABEL(L2),new SEQ(body_code,new SEQ(new JUMP(new Name(L1)),new LABEL(L3))))));
+    }
 
     private Stm translateExpCall(ExpCall e){
 
@@ -891,14 +1029,9 @@ public class Semant {
         FunEnv.exitBlock();
     }
 
-    //If cond != 0 goto lb_then
-    //else goto lb_else
-    public Stm ifthenelse(Stm cond, String lb_then, String lb_else){
-        return new CJUMP(NEQ,cond,new CONST(0),new LABEL(lb_then),new LABEL(lb_else));
-    }
-
     private Generator code_tree;
     private Exp prog;
     private SymbolTable VarEnv,TyEnv,FunEnv;
     private ErrorMsg err;
+    private Stack<String> loop_ends;
 }

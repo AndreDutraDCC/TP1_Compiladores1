@@ -1,1 +1,2 @@
-java -cp .:Grammar/java-cup-11b-runtime.jar Main $@
+java -cp .:Grammar/java-cup-11b-runtime.jar Compiler Testes/teste_certo.tig -absyn -listinput -intermcode
+java -cp .:Grammar/java-cup-11b-runtime.jar Compiler Testes/teste_errado.tig -absyn -listinput -intermcode

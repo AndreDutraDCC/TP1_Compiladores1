@@ -1,7 +1,0 @@
-let
-    var x:int :="hi"
-    var p := let var x:=0 var y:="hi" in let var x:= 2 in x end end
-in
-(
-)
-end

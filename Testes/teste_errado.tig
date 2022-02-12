@@ -1,8 +1,8 @@
 let
-type tipoarranjo = array of int
+  type tipoarranjo = array of int
   var Arranjo:tipoarranjo := tipoarranjo [10] of 0
 in
-  Arranjo[2] = "nome";
-  Arranjo[3] = "data"
-  Arranjo[4] = "telefone"
+  Arranjo[2] = 10;
+  Arranjo[3] = "Hello World";
+  Arranjo[4] = 5;
 end

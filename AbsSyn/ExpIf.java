@@ -13,8 +13,10 @@ public class ExpIf extends Exp{
     }
 
     public void printkids(String pref){
+        Boolean is_last = else_body == null;
+
         print(pref,cond);
-        print(pref,then_body);
+        print(pref,then_body,is_last);
         print(pref,else_body,true);
     }
 }
