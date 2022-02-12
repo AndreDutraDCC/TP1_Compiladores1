@@ -3,12 +3,12 @@ package Intermediate.Nodes;
 import java.util.ArrayList;
 
 public class CALL extends Stm {
-    public CALL(Stm function, Stm[] args) {
+    public CALL(Stm function, ArrayList<Stm> args) {
         name_ = "CALL";
-        children = new ArrayList<Stm>();
         children.add(function);
-        for(int i = 0; i < args.length; i++)
-            children.add(args[i]);
+        for(Stm arg: args){
+            children.add(arg);
+        }
     }
 
     @Override

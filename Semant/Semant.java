@@ -9,6 +9,7 @@ import Types.*;
 import SymbolTable.*;
 import SymbolTable.Symbols.*;
 
+import Intermediate.*;
 import Intermediate.Nodes.*;
 import static Grammar.sym.*;
 
@@ -19,6 +20,8 @@ public class Semant {
         prog = program;
         err = error;
 
+        code_tree = new Generator();
+
         VarEnv = new SymbolTable();
         TyEnv = new SymbolTable();
         FunEnv = new SymbolTable();
@@ -26,8 +29,6 @@ public class Semant {
         TyEnv.installSymbol(new TypeSymbol("int", new INT(), 4)); //int
         TyEnv.installSymbol(new TypeSymbol("string", new STRING(), 4)); //string
         
-        //FunEnv.installSymbol(new FunctionSymbol("malloc",new VOID(), -1, 0, new ArrayList<Type>(List.of(new INT())))); //malloc
-        //FunEnv.installSymbol(new FunctionSymbol("initarray",new VOID(), -1, 0, new ArrayList<Type>(List.of(new INT(), new STRING())))); //initarray
         FunEnv.installSymbol(new FunctionSymbol("print",new VOID(), -1, 0, new ArrayList<Type>(List.of(new STRING())))); //print
         FunEnv.installSymbol(new FunctionSymbol("getchar",new STRING(), -1, 0, new ArrayList<Type>(List.of()))); //getchar
         FunEnv.installSymbol(new FunctionSymbol("ord",new INT(), -1, 0, new ArrayList<Type>(List.of(new STRING())))); //ord
@@ -38,9 +39,19 @@ public class Semant {
         FunEnv.installSymbol(new FunctionSymbol("exit",new VOID(), -1, 0, new ArrayList<Type>(List.of(new INT())))); //exit
     }
 
-    //TODO: Verificações extras do programa final
     public Stm translateProgram(){
-        return translateExp(prog);
+        Stm prog_code = translateExp(prog);
+
+        if(prog == null){
+            return null;
+        }
+        
+        if(prog_code.isExp()){
+            prog_code = new EXP(prog_code);
+        }
+        //TODO instalar label
+        //Generator root
+        return null;
     }
 
     //Tradução de declarações
@@ -89,7 +100,8 @@ public class Semant {
             }
         }
 
-        temp = 0;
+        temp = code_tree.temporaryFromVariable(d.var_name);
+
         VarEnv.installSymbol(new VarSymbol(d.var_name, var_ty, temp, d.var_value.mem_size));
 
         d.type = new VOID();
@@ -138,12 +150,31 @@ public class Semant {
         ArrayList<Type> args = new ArrayList<Type>();
 
         TypeSymbol ptype_s;
+        FunctionSymbol this_func;
+
+        Type ret_type = new VOID();
+        int label;
 
         if(FunEnv.getSymbol(d.func_name) != null){
             err.error(d.pos,"Erro Semântico: Função de mesmo nome já foi declarada.");
+            return null;
         }
-        VarEnv.enterBlock();
+
+        if(d.return_type != null){
+            ptype_s = (TypeSymbol) TyEnv.getSymbol(d.return_type);
+            if(ptype_s == null){
+                err.error(d.pos,"Erro Semântico: Tipo inválido de retorno da função \""+d.func_name+"\".");
+                return null;
+            }
+
+            ret_type = ptype_s.type;
+        }
+
+        //TODO label
+        label = 0;
+        FunEnv.installSymbol(new FunctionSymbol(d.func_name, ret_type, label, -1, null));
         
+        VarEnv.enterBlock();
 
         while(params != null){
             ptype_s = (TypeSymbol) TyEnv.getSymbol(params.field_type);
@@ -153,7 +184,7 @@ public class Semant {
                 return null;
             }
             
-            temp = 0;
+            temp = code_tree.temporaryFromParam(params.field_id);
 
             VarEnv.installSymbol(new VarSymbol(params.field_id, ptype_s.type,temp,ptype_s.size));
 
@@ -162,6 +193,10 @@ public class Semant {
             params = params.tail;
         }
 
+        this_func = (FunctionSymbol) FunEnv.getSymbol(d.func_name);
+
+        this_func.argList = args;
+
         Stm body_code = translateExp(d.body);
 
         VarEnv.exitBlock();
@@ -169,18 +204,8 @@ public class Semant {
         if(body_code == null){
             return null;
         }
-
-        Type ret_type = new VOID();
-        int label;
         
         if(d.return_type != null){
-            ptype_s = (TypeSymbol) TyEnv.getSymbol(d.return_type);
-            if(ptype_s == null){
-                err.error(d.pos,"Erro Semântico: Tipo inválido de retorno da função \""+d.func_name+"\".");
-                return null;
-            }
-
-            ret_type = ptype_s.type;
             if(!ret_type.convertsTo(d.body.type)){
                 err.error(d.pos,"Erro Semântico: Tipo da função \""+d.func_name+"\" incompatível com sua declaração.");
                 return null;
@@ -188,12 +213,10 @@ public class Semant {
 
             body_code = new MOVE(new TEMP(-2),body_code);
         }
-        //TODO associar código da expressão ao label gerado
-        label = 0;
          
         d.type = new VOID();
         d.mem_size = 0;
-        FunEnv.installSymbol(new FunctionSymbol(d.func_name, ret_type, label,  -1, args));
+        
         return new EXP(new CONST(0));
     }
 
@@ -260,7 +283,7 @@ public class Semant {
         e.type = new STRING();
         e.mem_size = 4;
         //TODO LABEL STRING
-        String label = "L?";
+        String label = String.valueOf(2);
 
         return new Name(label);
     }
@@ -268,10 +291,11 @@ public class Semant {
     private Stm translateExpNil(ExpNil e){
         e.type = new NIL();
         e.mem_size = 0;
-        
+
         return new CONST(0);
     }
 
+    //TODO início das não implementadas
     private Stm translateExpOp(ExpOp e){
         Exp left = e.e1;
         Exp right = e.e2;
@@ -333,57 +357,276 @@ public class Semant {
     }
 
     private Stm translateExpIf(ExpIf e){
-        Exp cond_ = e.cond;
-        Exp then_ = e.then_body;
-        Exp else_ = e.else_body;
+        Exp cond = e.cond;
+        Exp then = e.then_body;
+        Exp els = e.else_body;
         
-        Stm cond_code = translateExp(cond_);
-        Stm then_code = translateExp(then_);
-        //Stm else_code = translateExp(else_);
+        Stm cond_code = translateExp(cond);
+        Stm then_code = translateExp(then);
+        Stm else_code;
 
         if(cond_code == null || then_code == null){
             return null;
         }
-        if(!cond_.type.convertsTo(new INT())){
-            err.error(cond_.pos, "Erro Semântico: Tipo inválido, inteiro esperado.");
+        if(!cond.type.convertsTo(new INT())){
+            err.error(cond.pos, "Erro Semântico: Tipo inválido, inteiro esperado.");
+            return null;
         }
-        if(else_ != null){
-            if(!then_.type.convertsTo(else_.type)){
-                err.error(e.pos, "Erro Semântico: As cláusulas then e else do if devem ser de mesmo tipo.");
+        if(els == null){
+            else_code = new EXP(new CONST(0));
+
+            if(!then.type.convertsTo(new VOID())){
+                err.error(then.pos, "Erro Semântico: VOID esperado.");
+                return null;
             }
+    
+            e.type = new VOID();
+            e.mem_size = 0;            
         }
-        //If cond == 0 jump end
-        //then code
-        //jump end
-        //LABEL end
-        
-        //If cond == 0 jump else
-        //then code
-        //jump end
-        //LABEL else
-        //else code
-        //jump end
-        //LABEL end
+        else{
+            else_code = translateExp(els);
+
+            if(else_code == null){
+                return null;
+            }
+
+            if(!then.type.convertsTo(els.type)){
+                err.error(e.pos, "Erro Semântico: As cláusulas then e else do if devem ter mesmo tipo.");
+                return null;
+            }
+
+            e.type = then.type;
+            e.mem_size = then.mem_size;
+        }
+
+
         return null;
     }
 
-    private Stm translateExpAttr(ExpAttr e){return null;}
-
-    private Stm translateExpArray(ExpArray e){return null;}
-
-    private Stm translateExpRec(ExpRec e){return null;}
 
     private Stm translateExpBreak(ExpBreak e){return null;}
-
-    private Stm translateExpCall(ExpCall e){return null;}
 
     private Stm translateExpFor(ExpFor e){return null;}
 
     private Stm translateExpWhile(ExpWhile e){return null;}
 
-    private Stm translateExpLet(ExpLet e){return null;}
+    private Stm translateExpCall(ExpCall e){
+        return null;
+    }
 
-    private Stm translateExpSeq(ExpSeq e){return null;}
+//TODO marcador do fim das expressões não implementadas
+
+    private Stm translateExpAttr(ExpAttr e){
+        Stm var_code = translateVar(e.var);
+        Stm exp_code = translateExp(e.val);
+
+        if(var_code == null || exp_code == null){
+            return null;
+        }
+
+        if(!e.var.type.convertsTo(e.val.type)){
+            err.error(e.pos,"Erro Semântico: Tipos incompatíveis na atribuição.");
+        }
+
+        e.type = new VOID();
+        e.mem_size = 0;
+
+        return new MOVE(var_code,exp_code);
+    }
+
+    private Stm translateExpArray(ExpArray e){
+        Stm len_code = translateExp(e.len);
+        Stm val_code = translateExp(e.val);
+
+        if(len_code == null || val_code == null){
+            return null;
+        }
+
+        if(!e.len.type.convertsTo(new INT())){
+            err.error(e.len.pos,"Erro Semântico: Inteiro esperado.");
+            return null;
+        }
+
+        TypeSymbol s = (TypeSymbol) TyEnv.getSymbol(e.arr_type);
+
+        if(s == null){
+            err.error(e.pos,"Erro Semântico: Tipo não declarado: \""+e.arr_type+"\".");
+            return null;
+        }
+        ARRAY arr_ty = (ARRAY) s.type.actual();
+
+        if(!(arr_ty instanceof ARRAY)){
+            err.error(e.pos,"Erro Semântico: Tipo \""+e.arr_type+"\" não é um array.");
+            return null;
+        }
+
+        Type elem_type = arr_ty.elementsType_;
+
+        if(!elem_type.convertsTo(e.val.type)){
+            err.error(e.val.pos,"Erro Semântico: tipo do valor inicial do arranjo incompatível com o tipo \""+e.arr_type+"\".");
+            return null;
+        }
+
+        e.type = s.type;
+        e.mem_size = s.size;
+
+        return new CALL(new Name("initarray"),new ArrayList<Stm>(List.of(new CONST(0),len_code,val_code)));
+    }
+
+    private Stm translateExpRec(ExpRec e){
+        TypeSymbol s = (TypeSymbol) TyEnv.getSymbol(e.rec_type);
+
+        if(s == null){
+            err.error(e.pos,"Erro Semântico: tipo \""+e.rec_type+"\" não foi declarado.");
+            return null;
+        }
+
+        int temp = code_tree.getTemporary();
+        int offset = 0;
+
+        FieldExpList aux_list;
+        Stm exp_code;
+        Stm Rec_code = new MOVE(new TEMP(temp), new CALL(new Name("malloc"),new ArrayList<Stm>(List.of(new CONST(0), new CONST(s.size)))));
+        
+        aux_list = e.fields;
+
+        for(VarSymbol vs: s.fields){
+            if(aux_list == null){
+                err.error(e.pos,"Erro Semântico: Número inválido de campos na inicialização do registro \""+e.rec_type+"\".");
+                return null;
+            }
+            
+            exp_code = translateExp(aux_list.field_value);
+
+            if(exp_code == null){
+                return null;
+            }
+
+            if(!vs.type.convertsTo(aux_list.field_value.type)){
+                err.error(e.pos,"Erro Semântico: Inicialização incompatível no registro \""+e.rec_type+"\".");
+                return null;
+            }
+
+            Rec_code = new SEQ(Rec_code,new MOVE(new MEM(new BINOP(PLUS,new TEMP(temp), new CONST(offset))),exp_code));
+            offset += vs.size;
+            aux_list = aux_list.tail;
+        }
+
+        if(aux_list != null){
+            err.error(e.pos,"Erro Semântico: Número inválido de campos na inicialização do registro \""+e.rec_type+"\".");
+            return null;
+        }
+
+        e.type = s.type;
+        e.mem_size = s.size;
+
+        return new ESEQ(Rec_code, new TEMP(temp));
+    }
+
+    private Stm translateExpSeq(ExpSeq e){
+        ExpList aux_list = e.exps;
+        ArrayList<Stm> code_list = new ArrayList<Stm>();
+        Stm aux_code,res_code;
+        Exp aux_exp = null;
+
+        while(aux_list != null){
+            aux_exp = aux_list.head;
+            aux_code = translateExp(aux_exp);
+            if(aux_code == null){
+                return null;
+            }
+
+            code_list.add(aux_code);
+            aux_list = aux_list.tail;
+        }
+
+        e.type = aux_exp.type;
+        e.mem_size = aux_exp.mem_size;
+
+        if(code_list.isEmpty()){
+            return new EXP(new CONST(0));
+        }
+
+        res_code = code_list.get(0);
+
+        if(code_list.size() == 1){
+            return res_code;
+        }
+
+        if(res_code.isExp()){
+            res_code = new EXP(res_code);
+        }
+
+        for(int i = 1; i < code_list.size() - 1; i++){
+            aux_code = code_list.get(i);
+            
+            if(aux_code.isExp()){
+                aux_code = new EXP(aux_code);
+            }
+
+            res_code = new SEQ(res_code,aux_code);
+        }
+
+        aux_code = code_list.get(code_list.size() - 1);
+
+        if(aux_code.isExp()){
+            return new ESEQ(res_code,aux_code);
+        }
+
+        return new SEQ(res_code,aux_code);
+    }
+    
+    private Stm translateExpLet(ExpLet e){
+        Stm decs_code, exp_code, aux_code;
+        DecList aux_dl;
+
+        Boolean has_decs = (e.decs != null);
+
+        enterBlock();
+
+        decs_code = null;
+
+        if(has_decs){
+            decs_code = translateDec(e.decs.head);
+            aux_dl = e.decs.tail;
+
+            if(decs_code == null){
+                return null;
+            }
+
+            while(aux_dl != null){
+                aux_code = translateDec(aux_dl.head);
+                if(aux_code == null){
+                    return null;
+                }
+
+                decs_code = new SEQ(decs_code, aux_code);
+
+                aux_dl = aux_dl.tail;
+            }
+        }
+
+        exp_code = translateExp(e.exps);
+
+        if(exp_code == null){
+            return null;
+        }
+
+        exitBlock();
+
+        e.type = e.exps.type;
+        e.mem_size = e.exps.mem_size;
+
+        if(!has_decs){
+            return exp_code;
+        }
+
+        if(exp_code.isExp()){
+            return new ESEQ(decs_code,exp_code);
+        }
+
+        return new SEQ(decs_code,exp_code);
+    }
 
     //Tradução de Variáveis
 
@@ -559,15 +802,19 @@ public class Semant {
         return new EXP(new CONST(0));
     }
 
-    //Tradução de listas
-
-    private Stm translateExpList(ExpList e){return null;}
-    
-    private Stm translateDecList(DecList d){return null;}
-    
-    private Stm translateFieldExpList(FieldExpList v){return null;}
-
     //funções auxiliares
+
+    private void enterBlock(){
+        VarEnv.enterBlock();
+        TyEnv.enterBlock();
+        FunEnv.enterBlock();
+    }
+
+    private void exitBlock(){
+        VarEnv.exitBlock();
+        TyEnv.exitBlock();
+        FunEnv.exitBlock();
+    }
 
     //If cond != 0 goto lb_then
     //else goto lb_else
@@ -575,6 +822,7 @@ public class Semant {
         return new CJUMP(NEQ,cond,new CONST(0),new LABEL(lb_then),new LABEL(lb_else));
     }
 
+    private Generator code_tree;
     private Exp prog;
     private SymbolTable VarEnv,TyEnv,FunEnv;
     private ErrorMsg err;

@@ -22,6 +22,16 @@ public abstract class Stm {
         return res;
     }
 
+    public Boolean isExp(){
+        return  (this instanceof BINOP)||
+                (this instanceof CALL) ||
+                (this instanceof CONST)||
+                (this instanceof ESEQ) ||
+                (this instanceof MEM)  ||
+                (this instanceof Name) ||
+                (this instanceof TEMP);
+    }
+
     String name_;
     public ArrayList<Stm> children;
 }
